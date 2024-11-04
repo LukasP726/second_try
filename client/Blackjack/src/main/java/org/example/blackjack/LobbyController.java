@@ -7,6 +7,8 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
+import java.io.IOException;
+
 public class LobbyController {
     @FXML
     private ComboBox<String> gameModeComboBox;
@@ -27,34 +29,47 @@ public class LobbyController {
             return;
         }
 
-        // Logika pro vstup do místnosti nebo čekání na další hráče
-        // Tady byste mohli poslat příkaz na server, aby zjistil, zda je místnost dostupná.
-        // Pro účely tohoto příkladu předpokládejme, že místnost je dostupná.
-
-        if (isRoomAvailable(selectedMode)) {
-            // Načtěte hlavní herní okno
-            loadBlackjackGame();
-        } else {
-            // Zobrazit čekací okno
-            statusLabel.setText("Čekání na další hráče...");
-            // Zde můžete přidat logiku pro čekání
+        try {
+            if (client.joinRoom(selectedMode)) {
+                if (selectedMode.equals("Solo")) {
+                    loadBlackjackGame();
+                    //startSinglePlayerGame(); // Spuštění hry pro jednoho hráče
+                } else {
+                    //multiplayer
+                    //TODO: vytvoření nového zobrazení hry pro více hráčů
+                    //loadBlackjackGame();
+                }
+            } else {
+                statusLabel.setText("Čekání na další hráče...");
+                waitForOpponent(); // Čeká na připojení dalšího hráče
+            }
+        } catch (IOException e) {
+            statusLabel.setText("Chyba při připojování do místnosti.");
+            e.printStackTrace();
         }
     }
 
-    private boolean isRoomAvailable(String mode) {
-        // Implementujte logiku pro kontrolu dostupnosti místnosti
-        // Například můžete zkontrolovat počet hráčů v místnosti
-        return true; // Pro testování předpokládáme, že místnost je vždy dostupná
+    private void waitForOpponent() {
+        new Thread(() -> {
+            try {
+                if (client.waitForOpponent()) {
+                    loadBlackjackGame(); // Spuštění hry po připojení druhého hráče
+                } else {
+                    statusLabel.setText("Nebylo možné připojit dalšího hráče.");
+                }
+            } catch (IOException e) {
+                statusLabel.setText("Chyba při čekání na hráče.");
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     private void loadBlackjackGame() {
-        // Načtení hlavního herního okna
-        // Použijte metodu loadBlackjackGame jako dříve
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("blackjack-view.fxml"));
             Scene scene = new Scene(fxmlLoader.load());
             BlackjackController controller = fxmlLoader.getController();
-            controller.setClient(client); // Předání klienta
+            controller.setClient(client);
 
             Stage stage = (Stage) statusLabel.getScene().getWindow();
             stage.setTitle("Blackjack Game");

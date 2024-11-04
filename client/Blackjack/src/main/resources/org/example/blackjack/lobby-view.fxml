@@ -11,8 +11,8 @@
             <FXCollections fx:factory="observableArrayList">
                 <String fx:value="Solo"/>
                 <String fx:value="Duo"/>
-                <String fx:value="Trio"/>
-                <String fx:value="Quadro"/>
+               <!-- <String fx:value="Trio"/>
+                <String fx:value="Quadro"/>-->
             </FXCollections>
         </items>
     </ComboBox>
