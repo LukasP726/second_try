@@ -11,11 +11,13 @@
             <FXCollections fx:factory="observableArrayList">
                 <String fx:value="Solo"/>
                 <String fx:value="Duo"/>
-               <!-- <String fx:value="Trio"/>
-                <String fx:value="Quadro"/>-->
             </FXCollections>
         </items>
     </ComboBox>
     <Button text="Vstoupit do místnosti" onAction="#joinRoom"/>
+    <Button text="Vytvořit místnost" onAction="#createRoom"/> <!-- Nové tlačítko -->
+    <Label text="Dostupné místnosti:"/>
+    <ListView fx:id="roomsListView" prefHeight="200.0"/>
+    <Button text="Obnovit seznam místností" onAction="#refreshRooms"/>
     <Label fx:id="statusLabel" text=""/>
 </VBox>

@@ -1,11 +1,15 @@
 package org.example.blackjack;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -30,6 +34,8 @@ public class BlackjackController {
     private Button btnHit;
     @FXML
     private Button btnStand;
+    @FXML
+    private Button btnBackToLobby;
 /*
     public void initialize() {
         try {
@@ -42,31 +48,30 @@ public class BlackjackController {
     }
 */
     // Metoda pro připojení k serveru pomocí BlackjackClient
+
+    /*
     public void connectToServer() throws IOException {
         client = new BlackjackClient("localhost", 8080); // Vytvoření klienta pro komunikaci se serverem
         messageLabel.setText("Connected to server.");
+    }
+    */
+
+    public void updateUi(Runnable uiTask) {
+        if (Platform.isFxApplicationThread()) {
+            uiTask.run();
+        } else {
+            Platform.runLater(uiTask);
+        }
     }
 
     // Akce při stisknutí tlačítka "Hit"
     public void hit() {
         client.sendCommand("HIT"); // Odeslání příkazu "HIT" pomocí klienta
-        try {
-            String response = client.getResponse(); // Získání odpovědi od serveru
-            handleServerResponse(response); // Zpracování odpovědi
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     // Akce při stisknutí tlačítka "Stand"
     public void stand() {
         client.sendCommand("STAND"); // Odeslání příkazu "STAND" pomocí klienta
-        try {
-            String response = client.getResponse(); // Získání odpovědi od serveru
-            handleServerResponse(response); // Zpracování odpovědi
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     // Akce pro spuštění nové hry
@@ -93,111 +98,90 @@ public class BlackjackController {
 
 
     // Zpracování odpovědi od serveru
-    private void handleServerResponse(String response) {
-        if (response.startsWith("PLAYER_CARD")) {
-
-            String[] parts = response.split(" ");
-            String card = parts[1];
-            addCardToHand(playerCards, card); // Přidání karty do hráčovy ruky
-            updatePlayerScore(parts[2]); // Aktualizace skóre hráče
-
-            /*
-            Card card = deck.dealCard();
-            player.addCard(card);
-            addCardToView(card, playerCards);
-
-            if (player.isBusted()) {
-                messageLabel.setText("Player busts! Dealer wins.");
-                endGame();
-            }
-            playerScore.setText("Player Score: " + player.getScore());
-
-             */
-        } else if (response.startsWith("DEALER_CARD")) {
-            String[] parts = response.split("\\|");
-            String cardPart = parts[0].trim(); // Seznam karet dealera
-            String scorePart = parts[1].trim(); // Finální skóre
-            String winnerPart = parts[2].trim();
-            String[] dealerCardsArray = cardPart.replace("DEALER_CARDS", "").trim().split(" ");
-            for (String card : dealerCardsArray) {
-                addCardToHand(dealerCards, card); // Přidání karty do dealerovy ruky
-            }
-
-            // Zpracování skóre
-            String finalScore = scorePart.replace("FINAL_SCORE", "").trim();
-
-            updateDealerScore(finalScore); // Aktualizace skóre dealera
-            messageLabel.setText(winnerPart);
 
 
-            endGame();
-
-
-
-            /*
-            while (dealer.shouldHit()) {
-                Card card = deck.dealCard();
-                dealer.addCard(card);
-                addCardToView(card, dealerCards);
-            }
-
-            if (dealer.isBusted() || player.getScore() > dealer.getScore()) {
-                messageLabel.setText("Player wins!");
-                //dealerScore.setText("Dealer Score: " + dealer.getScore());
-            } else if (dealer.getScore() == player.getScore()) {
-                messageLabel.setText("It's a tie!");
-            } else {
-                messageLabel.setText("Dealer wins!");
-            }
-            dealerScore.setText("Dealer Score: " + dealer.getScore());
-            endGame();
-
-
-             */
-
-        } else if (response.startsWith("RESULT")) {
-            messageLabel.setText(response.split(" ")[1]); // Zobrazení výsledku hry
-            btnHit.setDisable(true); // Zakázání tlačítek po ukončení hry
+    public void displayResult(String result){
+        updateUi(() -> {
+            messageLabel.setText(result);    // Zobrazení výsledku hry
+            btnHit.setDisable(true);        // Zakázání tlačítek po ukončení hry
             btnStand.setDisable(true);
-        }else{
-            System.out.print("zase to nefunguje");
-        }
 
+        });
 
     }
+
+    public void setLabelText(String text){
+        updateUi(() -> {
+            messageLabel.setText(text);
+
+        });
+
+    }
+
+
+
+
 
     // Přidání karty do GUI ruky
     private void addCardToHand(HBox hand, String card) {
         ImageView cardView = new ImageView(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/cards/" + card + ".png"))));
         cardView.setFitWidth(100); // Nastavení velikosti karet
         cardView.setFitHeight(125);
-        hand.getChildren().add(cardView); // Přidání obrázku karty do GUI
+        //hand.getChildren().add(cardView); // Přidání obrázku karty do GUI
+        updateUi(() -> {
+            hand.getChildren().add(cardView);
+
+        });
     }
 
-    private void addCardToView(Card card, HBox container) {
+    public void addToPlayersHand(String card, String score){
+        addCardToHand(playerCards, card); // Přidání karty do hráčovy ruky
+        updatePlayerScore(score);
+    }
 
+    public void addToDealersHand(String card){
+        addCardToHand(dealerCards, card); // Přidání karty do hráčovy ruky
+    }
 
-        if(card !=null) {
+    @FXML
+    private void backToLobby() {
+        try {
+            // Načtení FXML pro lobby scénu
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("lobby-view.fxml"));
+            ///FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/blackjack/lobby-view.fxml"));
+            Scene lobbyScene = new Scene(loader.load());
 
-            ImageView cardImage = new ImageView(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/cards/" + card.getRank() + "_of_" + card.getSuit() + ".png"))));
-            cardImage.setFitHeight(125);
-            cardImage.setFitWidth(100);
-            container.getChildren().add(cardImage);
+            // Získání aktuálního okna (Stage) a nastavení nové scény
+            Stage stage = (Stage) btnBackToLobby.getScene().getWindow();
+            LobbyController lobbyController = loader.getController();
+            lobbyController.setClient(client); // Předání klienta
+            client.setLobbyController(lobbyController);
+            stage.setScene(lobbyScene);
+            stage.show();
 
-
+        } catch (IOException e) {
+            System.out.println("Chyba při načítání lobby scény: " + e.getMessage());
+            e.printStackTrace();
         }
-
-
     }
 
+
+    private void updateScoreText(Label label,String string){
+        updateUi(() -> {
+            label.setText(string);
+        });
+
+    }
     // Aktualizace skóre hráče
     private void updatePlayerScore(String score) {
-        playerScore.setText("Player Score: " + score);
+        updateScoreText(playerScore, "Player Score: " + score);
+        //playerScore.setText("Player Score: " + score);
     }
 
     // Aktualizace skóre dealera
-    private void updateDealerScore(String score) {
-        dealerScore.setText("Dealer Score: " + score);
+    public void updateDealerScore(String score) {
+        updateScoreText(dealerScore, "Dealer Score: " + score);
+        //dealerScore.setText("Dealer Score: " + score);
     }
 
     // Uzavření připojení při ukončení aplikace
@@ -209,9 +193,12 @@ public class BlackjackController {
         }
     }
 
-    private void endGame() {
-        btnHit.setDisable(true);  // Zakáže tlačítko "Hit"
-        btnStand.setDisable(true); // Zakáže tlačítko "Stand"
+    public void endGame() {
+        updateUi(() -> {
+            btnHit.setDisable(true);  // Zakáže tlačítko "Hit"
+            btnStand.setDisable(true); // Zakáže tlačítko "Stand"
+        });
+
     }
 
 

@@ -72,6 +72,7 @@ public class ConnectController {
             Scene scene = new Scene(fxmlLoader.load());
             LobbyController lobbyController = fxmlLoader.getController();
             lobbyController.setClient(client); // Předání klienta
+            client.setLobbyController(lobbyController);
 
             stage.setTitle("Lobby");
             stage.setScene(scene);

@@ -20,6 +20,7 @@
         <Button text="Hit" fx:id="btnHit" onAction="#hit"/>
         <Button text="Stand" fx:id="btnStand" onAction="#stand"/>
         <Button text="New Game" fx:id="btnNewGame" onAction="#newGame"/>
+        <Button text="Back to lobby" fx:id="btnBackToLobby" onAction="#backToLobby"/>
     </HBox>
     <Label fx:id="messageLabel" text="Click 'New Game' to start!" style="-fx-font-size: 16px;"/>
 </VBox>

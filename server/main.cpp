@@ -15,7 +15,8 @@
 
 
 
-
+#include <unistd.h>
+#include <cstring>
 // Zahrnutí knihoven podle operačního systému
 #ifdef _WIN32
 #include <winsock2.h>
@@ -26,6 +27,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+
 
 #endif
 
@@ -39,6 +41,9 @@
 
 
 std::shared_mutex gameStateMutex;
+int commandPort = 8080; // Port pro příkazy
+int pingPort = 8081;    // Port pro PING/PONG
+std::string ipv4Address = "127.0.0.1";
 
 // Struktura, která obsahuje karty a skóre hráče
 struct PlayerState {
@@ -53,6 +58,9 @@ struct Room {
     std::string roomId; // ID místnosti
     std::map<std::string, PlayerState> players; // Hráči v místnosti
     bool isWaitingForPlayers = true; // Indikátor, zda čekáme na další hráče
+    int maxPlayers; // Maximální počet hráčů v místnosti
+
+    //Room(const std::string& id, int max) : roomId(id), maxPlayers(max) {}
 };
 
 // Struktura pro stav celé hry, zahrnující dealera
@@ -62,6 +70,7 @@ struct GameState {
     //std::map<int, PlayerState> players;
     std::map<std::string, PlayerState> players;     // Mapa hráčů: <hráčské ID, stav hráče>
     std::map<std::string, Room> rooms;              // Mapa místností
+    std::mutex gameStateMutex;
 };
 
 
@@ -159,15 +168,17 @@ std::string joinRoom(const std::string &playerId, GameState &gameState) {
             std::cout << "Player " << playerId << " joined room " << room.roomId << std::endl;
 
             // Zkontrolujeme, zda máme dost hráčů pro zahájení hry
-            if (room.players.size() >= 2) {
+            if (room.players.size() == room.maxPlayers) {
                 room.isWaitingForPlayers = false; // Zahájit hru
                 return "GAME_START"; // Odeslat hráčům zprávu, že hra začíná
             }
-            return "WAITING_FOR_PLAYERS"; // Čekáme na dalšího hráče
+            return "WAITING_FOR_OPPONENT"; // Čekáme na dalšího hráče
         }
     }
 
     // Pokud místnost neexistuje, vytvoř novou
+
+    //Room newRoom(generateUUID(), 2);
     Room newRoom;
     newRoom.roomId = generateUUID(); // Vytvoření nové ID pro místnost
     newRoom.players[playerId] = PlayerState(); // Přidání hráče
@@ -194,6 +205,16 @@ void checkForInactivePlayers(GameState &state) {
     }
 }
 
+Room* getRoomForPlayer(const std::string& clientId, GameState &state) {
+    for (auto& [roomId, room] : state.rooms) {
+        if (room.players.find(clientId) != room.players.end()) {
+            return &room;
+        }
+    }
+    return nullptr; // Hráč není v žádné místnosti
+}
+
+
 
 
 // Funkce pro zpracování příkazů a aktualizaci stavu hry
@@ -203,20 +224,68 @@ std::string handleCommand(const std::string &command, GameState &state, const st
     //int clientId
     PlayerState &playerState = state.players[clientId];
     std::cout << "Command recieved: " << command << std::endl;
-    std::cout << "Command substring: " << command.substr(0, 9) << std::endl;
-
+    //std::cout << "Command substring: " << command.substr(0, 9) << std::endl;
+/*
     if (command == "PING") {
         // Aktualizace času posledního pingu
-        playerState.lastPingTime = std::chrono::steady_clock::now();
-        response = "PONG";
+        //playerState.lastPingTime = std::chrono::steady_clock::now();
+        //response = "PONG";
+
+        // Ihned odpoví na PING bez dalšího zpracování
+
+    }
+    */
+    if(command == "REFRESH") {
+        response = "ROOMS"; // Začátek odpovědi
+        for (const auto &roomPair : state.rooms) {
+            const Room &room = roomPair.second;
+            // Přidání informací o místnosti do odpovědi
+            response += "|" + room.roomId + "|" + (room.isWaitingForPlayers ? "waiting" : "full") + "|" + std::to_string(room.players.size()) + "/" + std::to_string(room.maxPlayers);
+        }
+
+    }
+    else if (command.substr(0, 11) == "CREATE_ROOM") {
+        size_t separatorPos = command.find('|');
+        if (separatorPos != std::string::npos) {
+            // Extrahování maxPlayers
+            std::string maxPlayersStr = command.substr(separatorPos + 1);
+            int maxPlayers = std::stoi(maxPlayersStr); // Převod na číslo
+
+            // Generování ID místnosti
+            std::string roomId = generateUUID();
+            Room newRoom;
+            newRoom.roomId = roomId;
+            newRoom.maxPlayers = maxPlayers; // Nastavení maximálního počtu hráčů
+            state.rooms[roomId] = newRoom; // Přidání nové místnosti do stavu
+
+            // Odpověď na klienta
+            response = "ROOM_CREATED:" + roomId;
+        }   else {
+            // Chybné formátování zprávy
+            response = "ERROR:INVALID_COMMAND_FORMAT";
+        }
+
     }
     else if (command.substr(0, 9) == "JOIN_ROOM") {
-        //response = joinRoom(clientId, state);
-        response = "ROOM_JOINED";
+        response = joinRoom(clientId, state);
+        //response = "ROOM_JOINED";
     }
 
     else if (command == "WAIT_FOR_OPPONENT") {
-        response = "OPPONENT_JOINED";
+        //response = "OPPONENT_JOINED";
+
+        Room* room = getRoomForPlayer(clientId, state); // Získání místnosti, ve které je hráč připojen
+
+        if (room != nullptr) {
+            if (room->players.size() >= room->maxPlayers) {
+                room->isWaitingForPlayers = false;
+                response = "READY_TO_START"; // Odpověď, že hra může začít
+            } else {
+                response = "WAITING_FOR_OPPONENT"; // Odpověď, že čekáme na dalšího hráče
+            }
+        } else {
+            response = "ERROR_NO_ROOM"; // Pokud hráč není v žádné místnosti
+        }
     }
     else if (command == "HIT") {
         std::string newCard = getRandomCard();
@@ -299,32 +368,85 @@ void clientHandler(int client_socket, GameState &gameState) {
     closeSocket(client_socket);
 }*/
 
-void clientHandler(int client_socket, GameState &gameState) {
-    //int playerId = client_socket;
-    //std::string playerId = generateUUID();
-    std::string playerId = handlePlayerConnection(client_socket,"", gameState);
-    //gameState.players[playerId] = PlayerState();
-
+// Funkce pro pravidelnou kontrolu aktivity hráčů
+void monitorPing(GameState& gameState) {
     while (true) {
+        auto now = std::chrono::steady_clock::now();
+        for (auto& player : gameState.players) {
+            // Kontrola časového limitu pro poslední PING
+            if (std::chrono::duration_cast<std::chrono::seconds>(now - player.second.lastPingTime).count() > 30) {
+                std::cout << "Hráč " << player.first << " byl odpojen (timeout)." << std::endl;
+                gameState.players.erase(player.first); // Odstranění neaktivního hráče
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(10)); // Kontrola každých 10 sekund
+    }
+}
 
+
+void clientHandler(int client_socket, GameState &gameState) {
+    std::string playerId = handlePlayerConnection(client_socket, "", gameState);
+    bool clientActive = true;
+
+    // Nastavení intervalu pro zasílání "PING"
+    auto pingInterval = std::chrono::seconds(10);
+    auto lastPingTime = std::chrono::steady_clock::now();
+
+    while (clientActive) {
+        // Zkontrolovat, zda je čas odeslat nový "PING"
+        auto now = std::chrono::steady_clock::now();
+        if (now - lastPingTime >= pingInterval) {
+            std::string pingMessage = "PING\n";
+            int bytes_sent = send(client_socket, pingMessage.c_str(), pingMessage.size(), 0);
+            if (bytes_sent <= 0) {
+                std::cout << "Chyba při odesílání PING zprávy klientovi ID: " << playerId << std::endl;
+                break;
+            }
+            lastPingTime = now;
+        }
+
+        // Přijímání zpráv od klienta
         char buffer[256];
         memset(buffer, 0, 256);
         int bytes_received = recv(client_socket, buffer, 256, 0);
         if (bytes_received <= 0) {
-            std::cout << "Client disconnected, ID: " << playerId << std::endl;
+            std::cout << "Klient odpojen, ID: " << playerId << std::endl;
+            std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
             gameState.players.erase(playerId);
+            clientActive = false;
             break;
         }
 
         std::string command(buffer);
         command = trim(command);
-        std::string response = handleCommand(command, gameState, playerId);
-        send(client_socket, response.c_str(), response.size(), 0);
-        checkForInactivePlayers(gameState);
+        std::cout << "Přijatý příkaz: " << command << std::endl;
+        std::string response;
+
+        // Odpověď na příkaz od klienta
+
+        if (command == "PONG") {
+            // Aktualizace času poslední odezvy klienta
+            std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
+            gameState.players[playerId].lastPingTime = now;
+
+        } else {
+            response = handleCommand(command, gameState, playerId);
+            send(client_socket, response.c_str(), response.size(), 0);
+        }
+
+        // Kontrola neaktivních hráčů
+        //checkForInactivePlayers(gameState);
     }
 
     closeSocket(client_socket);
 }
+
+
+
+
+
+
+
 
 int main() {
     srand(time(0)); // Inicializace generátoru náhodných čísel
@@ -345,8 +467,8 @@ int main() {
 
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(8080);
-    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server_addr.sin_port = htons(commandPort);
+    server_addr.sin_addr.s_addr = inet_addr(ipv4Address.c_str());
 
     if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
         std::cerr << "Bind failed." << std::endl;
