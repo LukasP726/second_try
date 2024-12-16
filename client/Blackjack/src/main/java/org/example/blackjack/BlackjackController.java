@@ -36,6 +36,10 @@ public class BlackjackController {
     private Button btnStand;
     @FXML
     private Button btnBackToLobby;
+    @FXML
+    private Button btnNewGame;
+
+    private String ID;
 /*
     public void initialize() {
         try {
@@ -85,6 +89,8 @@ public class BlackjackController {
          */
         btnHit.setDisable(false);  // Povolit tlačítko "Hit"
         btnStand.setDisable(false); // Povolit tlačítko "Stand"
+        btnNewGame.setDisable(true);
+        btnBackToLobby.setDisable(true);
         playerCards.getChildren().clear();
         dealerCards.getChildren().clear();
         messageLabel.setText("New game started. Your turn!");
@@ -103,8 +109,8 @@ public class BlackjackController {
     public void displayResult(String result){
         updateUi(() -> {
             messageLabel.setText(result);    // Zobrazení výsledku hry
-            btnHit.setDisable(true);        // Zakázání tlačítek po ukončení hry
-            btnStand.setDisable(true);
+            //btnHit.setDisable(true);        // Zakázání tlačítek po ukončení hry
+            //btnStand.setDisable(true);
 
         });
 
@@ -153,11 +159,14 @@ public class BlackjackController {
 
             // Získání aktuálního okna (Stage) a nastavení nové scény
             Stage stage = (Stage) btnBackToLobby.getScene().getWindow();
+            //client.sendCommand("LEAVE_ROOM|"+lobbyScene.getSelectedRoom());
             LobbyController lobbyController = loader.getController();
             lobbyController.setClient(client); // Předání klienta
             client.setLobbyController(lobbyController);
+
             stage.setScene(lobbyScene);
             stage.show();
+
 
         } catch (IOException e) {
             System.out.println("Chyba při načítání lobby scény: " + e.getMessage());
@@ -197,6 +206,8 @@ public class BlackjackController {
         updateUi(() -> {
             btnHit.setDisable(true);  // Zakáže tlačítko "Hit"
             btnStand.setDisable(true); // Zakáže tlačítko "Stand"
+            btnNewGame.setDisable(false);
+            btnBackToLobby.setDisable(false);
         });
 
     }

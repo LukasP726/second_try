@@ -159,10 +159,14 @@ std::string evaluateGame(const PlayerState &player, int dealerScore) {
     return "DEALER_WINS";                                        // Dealer má vyšší skóre
 }
 
-std::string joinRoom(const std::string &playerId, GameState &gameState) {
-    // Pokud už existuje místnost, přidáme hráče
-    for (auto &roomEntry : gameState.rooms) {
-        Room &room = roomEntry.second;
+std::string joinRoom(const std::string &playerId, const std::string &roomId, GameState &gameState) {
+    // Projdeme všechny místnosti a hledáme tu s odpovídajícím roomId
+    auto roomIt = gameState.rooms.find(roomId); // Najde místnost podle roomId
+
+    if (roomIt != gameState.rooms.end()) {
+        Room &room = roomIt->second;
+
+        // Pokud je místnost stále ve stavu čekání na hráče
         if (room.isWaitingForPlayers) {
             room.players[playerId] = PlayerState(); // Přidání hráče do místnosti
             std::cout << "Player " << playerId << " joined room " << room.roomId << std::endl;
@@ -173,19 +177,40 @@ std::string joinRoom(const std::string &playerId, GameState &gameState) {
                 return "GAME_START"; // Odeslat hráčům zprávu, že hra začíná
             }
             return "WAITING_FOR_OPPONENT"; // Čekáme na dalšího hráče
+        } else {
+            return "ROOM_FULL"; // Místnost je již plná nebo hra už začala
+        }
+    } else {
+        return "ROOM_NOT_FOUND"; // Místnost nebyla nalezena
+    }
+}
+
+std::string leaveRoom(const std::string &playerId, const std::string &roomId, GameState &gameState) {
+    for (auto &roomEntry : gameState.rooms) {
+        Room &room = roomEntry.second;
+        if (room.roomId == roomId) {
+            // Zkontrolujeme, zda hráč existuje v místnosti
+            auto it = room.players.find(playerId);
+            if (it != room.players.end()) {
+                room.players.erase(it);  // Odebereme hráče z místnosti
+                std::cout << "Player " << playerId << " left room " << room.roomId << std::endl;
+
+                // Zkontrolujeme, zda místnost zůstává prázdná
+                if (room.players.empty()) {
+                    room.isWaitingForPlayers = true;  // Nastavíme místnost zpět na stav "čeká na hráče"
+                    std::cout << "Room " << room.roomId << " is now waiting for players." << std::endl;
+                }
+                return "PLAYER_LEFT";  // Odpovědní zpráva
+            } else {
+                return "PLAYER_NOT_FOUND";  // Hráč není v místnosti
+            }
         }
     }
 
-    // Pokud místnost neexistuje, vytvoř novou
-
-    //Room newRoom(generateUUID(), 2);
-    Room newRoom;
-    newRoom.roomId = generateUUID(); // Vytvoření nové ID pro místnost
-    newRoom.players[playerId] = PlayerState(); // Přidání hráče
-    gameState.rooms[newRoom.roomId] = newRoom;
-    std::cout << "Player " << playerId << " created and joined new room " << newRoom.roomId << std::endl;
-    return "WAITING_FOR_PLAYERS"; // Čekáme na dalšího hráče
+    return "ROOM_NOT_FOUND";  // Místnost nenalezena
 }
+
+
 
 void checkForInactivePlayers(GameState &state) {
     auto now = std::chrono::steady_clock::now();
@@ -267,7 +292,16 @@ std::string handleCommand(const std::string &command, GameState &state, const st
 
     }
     else if (command.substr(0, 9) == "JOIN_ROOM") {
-        response = joinRoom(clientId, state);
+        // Extrahování roomId ze zprávy (předpokládáme, že formát je "JOIN_ROOM|roomId")
+        std::string roomId = command.substr(10);  // Ořízne "JOIN_ROOM|" a zůstane pouze roomId
+        response = joinRoom(clientId, roomId, state);
+        //response = "ROOM_JOINED";
+    }
+
+    else if (command.substr(0, 10) == "LEAVE_ROOM") {
+        // Extrahování roomId ze zprávy (předpokládáme, že formát je "JOIN_ROOM|roomId")
+        std::string roomId = command.substr(11);  // Ořízne "JOIN_ROOM|" a zůstane pouze roomId
+        response = leaveRoom(clientId, roomId, state);
         //response = "ROOM_JOINED";
     }
 
@@ -419,7 +453,7 @@ void clientHandler(int client_socket, GameState &gameState) {
 
         std::string command(buffer);
         command = trim(command);
-        std::cout << "Přijatý příkaz: " << command << std::endl;
+        std::cout << "recieved command: " << command << std::endl;
         std::string response;
 
         // Odpověď na příkaz od klienta

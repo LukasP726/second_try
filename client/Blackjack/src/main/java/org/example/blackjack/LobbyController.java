@@ -26,6 +26,9 @@ public class LobbyController {
     @FXML
     private Button refreshButton;
 
+    @FXML
+    private Button joinRoomButton;
+
     private BlackjackClient client;
 
     List<String> rooms = new ArrayList<>();
@@ -44,7 +47,7 @@ public class LobbyController {
     }
 
     // Metoda pro vstup do herní místnosti
-    @FXML
+    /*@FXML
     private void joinRoom() {
         String selectedMode = gameModeComboBox.getValue();
         if (selectedMode == null) {
@@ -53,7 +56,30 @@ public class LobbyController {
         }
         client.sendCommand("JOIN_ROOM " + selectedMode);
 
+    }*/
+    @FXML
+    private void joinRoom() {
+
+
+        // Předpokládáme, že vybraná místnost má formát "ID: <room_id>, Stav: <status>, Hráči: <players>"
+        // Budeme extrahovat pouze ID (první část před čárkou)
+        String roomId = getSelectedRoom();
+
+        // Odeslání zprávy ve formátu "JOIN_ROOM|<room_id>"
+        client.sendCommand("JOIN_ROOM|" + roomId);
     }
+    public String getSelectedRoom(){
+        String selectedRoom = roomsListView.getSelectionModel().getSelectedItem();
+
+        // Kontrola, zda byla vybrána nějaká místnost
+        if (selectedRoom == null) {
+            statusLabel.setText("Prosím vyberte místnost.");
+            return null;
+        }
+        return selectedRoom.split(",")[0].split(":")[1].trim();
+
+    }
+
 
 
     @FXML
@@ -65,7 +91,7 @@ public class LobbyController {
             switch(selectedGameMode){
                 case"Solo":maxPlayers=1;break;
                 case"Duo":maxPlayers=2;break;
-                case"Trie":maxPlayers=3;break;
+                case"Trio":maxPlayers=3;break;
                 case"Quadro":maxPlayers=4;break;
                 default: maxPlayers=1; break;
 
@@ -117,6 +143,19 @@ public class LobbyController {
             statusLabel.setText("Nebylo možné načíst herní okno.");
             e.printStackTrace();
         }
+    }
+
+
+    // Inicilizace
+    public void initialize() {
+        // Deaktivace tlačítka, pokud není vybraná místnost
+        joinRoomButton.setDisable(true);
+
+        // Přidáme listener na výběr v ListView
+        roomsListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            // Pokud je vybrána místnost, aktivujeme tlačítko
+            joinRoomButton.setDisable(newValue == null);
+        });
     }
 
 
