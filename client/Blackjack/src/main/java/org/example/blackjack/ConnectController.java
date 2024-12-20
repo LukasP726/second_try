@@ -13,10 +13,15 @@ public class ConnectController {
     private TextField ipField;
     @FXML
     private TextField portField;
+
+    @FXML
+    private TextField nameField;
     @FXML
     private Button connectButton;
     @FXML
     private Label statusLabel;
+
+
 
     private Stage stage;
 
@@ -28,18 +33,19 @@ public class ConnectController {
     private void connectToServer() {
         String ip = ipField.getText();
         String portText = portField.getText();
-        if (ip.isEmpty() || portText.isEmpty()) {
-            statusLabel.setText("IP and Port cannot be empty.");
+        String userName = nameField.getText(); // Získání jména uživatele
+
+        if (ip.isEmpty() || portText.isEmpty() || userName.isEmpty()) {
+            statusLabel.setText("IP, Port, and Name cannot be empty.");
             return;
         }
 
         try {
             int port = Integer.parseInt(portText);
-            // Pokus o vytvoření klienta pro testování připojení
-            BlackjackClient client = new BlackjackClient(ip, port);
+            // Vytvoříme nový klient
+            BlackjackClient client = new BlackjackClient(ip, port, userName); // Předáváme jméno uživatele
 
-            // Při úspěchu načteme hlavní herní okno
-            //loadBlackjackGame(client);
+            // Načteme hlavní herní okno nebo lobby
             loadLobby(client);
 
         } catch (NumberFormatException e) {
@@ -48,6 +54,7 @@ public class ConnectController {
             statusLabel.setText("Failed to connect to server.");
         }
     }
+
 /*
     private void loadBlackjackGame(BlackjackClient client) {
         try {

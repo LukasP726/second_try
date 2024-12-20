@@ -21,17 +21,18 @@ public class BlackjackClient {
     private ExecutorService responseListener;
     private boolean running = true;
 
+    private String userName;
+
     //private BlockingQueue<CommandResponse> commandQueue = new LinkedBlockingQueue<>();
     //private BlockingQueue<CommandResponse> pingQueue = new LinkedBlockingQueue<>();
     private BlackjackController bc;
     private LobbyController lc;
 
 
-    public BlackjackClient(String host, int port) throws IOException {
+    public BlackjackClient(String host, int port, String userName) throws IOException {
         this.host = host;
         this.port = String.valueOf(port);
-
-
+        this.userName = userName; // Uložení uživatelského jména
 
         // Připojení k serveru
         socket = new Socket(host, port);
@@ -40,13 +41,15 @@ public class BlackjackClient {
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
 
-        // Zahájíme pravidelné odesílání "PING"
+        // Po připojení pošleme jméno na server
+        sendCommand( "CONNECT|" + userName);
 
 
-        //startPingingServer();
+        // Zahájíme poslouchání serveru
         startListeningToServer();
-
     }
+
+
 
 
 
@@ -94,6 +97,9 @@ public class BlackjackClient {
 
     public void setLobbyController(LobbyController controller) {
         this.lc= controller;
+    }
+    public LobbyController getLobbyController(){
+        return this.lc;
     }
 
 
