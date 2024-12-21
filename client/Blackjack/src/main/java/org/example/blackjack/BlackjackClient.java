@@ -106,17 +106,7 @@ public class BlackjackClient {
 
 
 
-    // Uzavření připojení
-    private void closeConnection() {
-        try {
-            if (socket != null && !socket.isClosed()) {
-                socket.close();
-            }
-            System.out.println("Připojení k serveru bylo ukončeno.");
-        } catch (IOException e) {
-            System.out.println("Chyba při uzavírání připojení.");
-        }
-    }
+
 
 
 
@@ -161,9 +151,13 @@ public class BlackjackClient {
     public void handleServerResponse(String response)throws IOException{
         if (response.startsWith("PLAYER_CARD")) {
 
-            String[] parts = response.split(" ");
+            String[] parts = response.split("\\|");
             String card = parts[1];
             bc.addToPlayersHand(card, parts[2]);
+            String flag = parts[3];
+            if(flag.equals("PLAYER_BUST")){
+                sendCommand("STAND");
+            }
 
 
         } else if (response.startsWith("DEALER_CARD")) {

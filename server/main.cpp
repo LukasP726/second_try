@@ -38,7 +38,6 @@
 
 std::shared_mutex gameStateMutex;
 int commandPort = 8080; // Port pro příkazy
-int pingPort = 8081;    // Port pro PING/PONG
 std::string ipv4Address = "127.0.0.1";
 // Zámek pro synchronizaci přístupu k socketu
 std::mutex pingMutex;
@@ -250,7 +249,7 @@ void checkForInactivePlayers(GameState &state) {
 
         if (now - playerState.lastPingTime > inactiveDuration) {
             std::cout << "Player " << it->first << " is inactive and will be removed." << std::endl;
-            closesocket(playerState.socket);
+            closeSocket(playerState.socket);
             std::cout << "Closing socket: " << playerState.socket << std::endl;
             it = state.players.erase(it); // Odstraní neaktivního hráče
         } else {
@@ -277,18 +276,9 @@ std::string handleCommand(const std::string &command, GameState &state, const st
     std::string response;
     //int clientId
     PlayerState &playerState = state.players[clientId];
-    std::cout << "Command recieved: " << command << std::endl;
+    //std::cout << "Command recieved: " << command << std::endl;
     //std::cout << "Command substring: " << command.substr(0, 9) << std::endl;
-/*
-    if (command == "PING") {
-        // Aktualizace času posledního pingu
-        //playerState.lastPingTime = std::chrono::steady_clock::now();
-        //response = "PONG";
 
-        // Ihned odpoví na PING bez dalšího zpracování
-
-    }
-    */
     if(command == "REFRESH") {
         response = "ROOMS"; // Začátek odpovědi
         for (const auto &roomPair : state.rooms) {
@@ -351,10 +341,25 @@ std::string handleCommand(const std::string &command, GameState &state, const st
         }
     }
     else if (command == "HIT") {
-        std::string newCard = getRandomCard();
-        playerState.playerCards.push_back(newCard);
-        playerState.playerScore += getCardValue(newCard);
-        response = "PLAYER_CARD " + newCard + " " + std::to_string(playerState.playerScore);
+        //if(playerState.playerScore < 21) {
+            std::string newCard = getRandomCard();
+            playerState.playerCards.push_back(newCard);
+            playerState.playerScore += getCardValue(newCard);
+            response = "PLAYER_CARD|" + newCard + "|" + std::to_string(playerState.playerScore);
+            if(playerState.playerScore > 21) {
+                response += "|PLAYER_BUST";
+            }
+            else {
+                response += "|PLAYER_OK";
+            }
+        /*
+        }
+
+        else {
+            response = "PLAYER_BUST";
+        }
+*/
+
     } else if (command == "STAND") {
         playerState.isStanding = true;
         //std::cout << state.players.size()<< std::endl;
@@ -374,7 +379,7 @@ std::string handleCommand(const std::string &command, GameState &state, const st
                 dealerCards += card + " ";
             }
             // Vytvoření finální zprávy pro hráče
-            response = dealerCards + "| FINAL_SCORE " + std::to_string(state.dealerScore) + " | " + finalResult;
+            response = dealerCards + "|FINAL_SCORE " + std::to_string(state.dealerScore) + "|" + finalResult;
 
             state.dealerCards.clear();
             state.dealerScore = 0;
@@ -394,6 +399,7 @@ std::string handleCommand(const std::string &command, GameState &state, const st
     } else {
         response = "UNKNOWN_COMMAND";
     }
+
     return response + "\n";
 }
 
@@ -447,34 +453,6 @@ void monitorPing(GameState& gameState) {
 }
 
 
-void getId(int client_socket, GameState &gameState) {
-    char buffer[256];
-    memset(buffer, 0, 256);
-
-    int bytes_received = recv(client_socket, buffer, 256, 0);
-    if (bytes_received <= 0) {
-        std::cout << "Client disconnected." << std::endl;
-        closeSocket(client_socket);
-        return;
-    }
-
-    std::string command(buffer);
-    command = trim(command);  // Očistíme od nežádoucího bílého prostoru
-    std::cout << "Received command: " << command << std::endl;
-
-    // Pokud klient posílá příkaz CONNECT
-    if (command.substr(0, 7) == "CONNECT") {
-        // Získáme jméno uživatele z příkazu
-        size_t pos1 = command.find("|");
-        std::string userName = command.substr(pos1 + 1);  // Jméno je po první |
-        std::string playerId = handlePlayerConnection(client_socket, userName, gameState);
-
-
-        // Odesíláme zpět klientovi potvrzení, že je připojen
-        std::string response = "WELCOME|" + userName;
-        send(client_socket, response.c_str(), response.size(), 0);
-    }
-}
 
 // Funkce pro odesílání PING zpráv
 void sendPing(int client_socket) {
@@ -516,9 +494,11 @@ void clientHandler(int client_socket, GameState &gameState) {
 
     std::string initialMessage(buffer);
     initialMessage = trim(initialMessage); // Odstranění bílých znaků
+    size_t pos1 = initialMessage.find("|");
+    std::string userName = initialMessage.substr(pos1 + 1);  // Jméno je po první |
 
     // Rozpoznání ID klienta z úvodní zprávy
-    std::string playerId = handlePlayerConnection(client_socket, initialMessage, gameState);
+    std::string playerId = handlePlayerConnection(client_socket, userName, gameState);
     if (playerId.empty()) {
         std::cout << "Failed to assign ID to client. Disconnecting." << std::endl;
         closeSocket(client_socket);
@@ -555,8 +535,10 @@ void clientHandler(int client_socket, GameState &gameState) {
             gameState.players[playerId].lastPingTime = now;
         } else {
             response = handleCommand(command, gameState, playerId);
+            std::cout << "Sending response: " << response << std::endl;
             send(client_socket, response.c_str(), response.size(), 0);
         }
+
     }
 
     pingThread.join(); // Počkejte na ukončení vlákna PING

@@ -202,6 +202,8 @@ public class BlackjackController {
         }
     }
 
+
+
     public void endGame() {
         updateUi(() -> {
             btnHit.setDisable(true);  // Zakáže tlačítko "Hit"

@@ -22,7 +22,7 @@ public class ConnectController {
     private Label statusLabel;
 
 
-
+    private BlackjackClient client;
     private Stage stage;
 
     public void setStage(Stage stage) {
@@ -44,7 +44,7 @@ public class ConnectController {
             int port = Integer.parseInt(portText);
             // Vytvoříme nový klient
             BlackjackClient client = new BlackjackClient(ip, port, userName); // Předáváme jméno uživatele
-
+            this.client =client;
             // Načteme hlavní herní okno nebo lobby
             loadLobby(client);
 
@@ -53,6 +53,11 @@ public class ConnectController {
         } catch (Exception e) {
             statusLabel.setText("Failed to connect to server.");
         }
+    }
+
+
+    public BlackjackClient getClient() {
+        return this.client;
     }
 
 /*

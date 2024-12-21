@@ -46,17 +46,7 @@ public class LobbyController {
         this.client = client;
     }
 
-    // Metoda pro vstup do herní místnosti
-    /*@FXML
-    private void joinRoom() {
-        String selectedMode = gameModeComboBox.getValue();
-        if (selectedMode == null) {
-            statusLabel.setText("Prosím vyberte herní mód.");
-            return;
-        }
-        client.sendCommand("JOIN_ROOM " + selectedMode);
 
-    }*/
     @FXML
     private void joinRoom() {
 

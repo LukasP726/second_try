@@ -5,19 +5,28 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-public class HelloApplication extends Application {
+public class Main extends Application {
+
+    ConnectController controller;
     @Override
     public void start(Stage stage) throws Exception {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("connect-view.fxml"));
         Scene connectScene = new Scene(fxmlLoader.load());
         stage.setTitle("Server Connection");
 
-        // Získání controlleru a nastavení stage pro budoucí použití
-        ConnectController controller = fxmlLoader.getController();
+        // Získání controlleru a nastavení stage pro budoucí použití ConnectController
+        controller = fxmlLoader.getController();
         controller.setStage(stage);
 
         stage.setScene(connectScene);
         stage.show();
+    }
+
+    @Override
+    public void stop() throws Exception {
+        // Zavření spojení při ukončení aplikace
+        controller.getClient().close();
+        super.stop();
     }
 
     public static void main(String[] args) {
