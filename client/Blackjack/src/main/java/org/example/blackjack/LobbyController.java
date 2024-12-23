@@ -92,7 +92,7 @@ public class LobbyController {
 
             // Aktualizace statusu
             statusLabel.setText("Místnost byla vytvořena.");
-            refreshRooms(); // Obnovit seznam místností po vytvoření
+            //refreshRooms(); // Obnovit seznam místností po vytvoření
         } else {
             statusLabel.setText("Vyberte herní mód před vytvořením místnosti.");
         }

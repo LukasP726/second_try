@@ -156,33 +156,97 @@ public class BlackjackClient {
             bc.addToPlayersHand(card, parts[2]);
             String flag = parts[3];
             if(flag.equals("PLAYER_BUST")){
-                sendCommand("STAND");
+                //sendCommand("STAND");
+                bc.stand();
             }
 
 
-        } else if (response.startsWith("DEALER_CARD")) {
+        }/*
+        else if(response.startsWith("STAND_RECEIVED")){
+            bc.disableButtons();
+        }*/
+        else if (response.startsWith("DEALER_CARDS")) {
+            // Rozdělení odpovědi podle '|'
             String[] parts = response.split("\\|");
-            String cardPart = parts[0].trim(); // Seznam karet dealera
-            String scorePart = parts[1].trim(); // Finální skóre
-            String winnerPart = parts[2].trim();
-            String[] dealerCardsArray = cardPart.replace("DEALER_CARDS", "").trim().split(" ");
-            for (String card : dealerCardsArray) {
-                bc.addToDealersHand(card); // Přidání karty do dealerovy ruky
 
+            // Zpracování karet dealera
+            int dealerCardsIndex = 1; // První index pro karty dealera
+            while (dealerCardsIndex < parts.length && !parts[dealerCardsIndex].equals("DEALER_SCORE")) {
+                String dealerCard = parts[dealerCardsIndex].trim();
+                bc.addToDealersHand(dealerCard); // Přidání karty do dealerovy ruky
+                dealerCardsIndex++;
             }
 
-            // Zpracování skóre
-            String finalScore = scorePart.replace("FINAL_SCORE", "").trim();
+            // Zpracování skóre dealera
+            String dealerScore = parts[dealerCardsIndex + 1].trim(); // Očekáváme, že skóre je následující část po "DEALER_SCORE"
+            bc.updateDealerScore(dealerScore); // Aktualizace skóre dealera
 
-            bc.updateDealerScore(finalScore); // Aktualizace skóre dealera
-            bc.setLabelText(winnerPart);
-            bc.endGame();
+            // Zpracování karet hráčů a jejich skóre
+            int playerIndex = dealerCardsIndex + 2; // Začínáme od hráčů po skóre dealera
+            int playerCount = 2; // Počítadlo pro hráče (od Player 2 do Player 4)
 
+            while (playerIndex < parts.length) {
+                if (parts[playerIndex].equals("PLAYER_CARDS")) {
+                    // Karty hráče (například Player 2, Player 3, ...)
+                    playerIndex++; // Přesuneme se na karty
+                    while (playerIndex < parts.length && !parts[playerIndex].equals("PLAYER_SCORE")) {
+                        String playerCard = parts[playerIndex].trim();
 
+                        // Přidání karty podle hráče (používáme playerCount pro rozlišení hráčů)
+                        switch (playerCount) {
+                            case 2:
+                                bc.addCardToHand(bc.getPlayer2Cards(), playerCard);
+                                break;
+                            case 3:
+                                bc.addCardToHand(bc.getPlayer3Cards(), playerCard);
+                                break;
+                            case 4:
+                                bc.addCardToHand(bc.getPlayer4Cards(), playerCard);
+                                break;
+                            default:
+                                // Pokud máme více než 4 hráče, můžeme přidat další logiku
+                                break;
+                        }
+                        playerIndex++;
+                    }
 
+                    // Skóre hráče
+                    if (playerIndex < parts.length && parts[playerIndex].equals("PLAYER_SCORE")) {
+                        String playerScore = parts[playerIndex + 1].trim(); // Skóre hráče
+                        // Aktualizace skóre pro příslušného hráče
+                        switch (playerCount) {
+                            case 2:
+                                bc.updatePlayerScore(bc.getPlayer2Score(), playerScore);
+                                break;
+                            case 3:
+                                bc.updatePlayerScore(bc.getPlayer3Score(), playerScore);
+                                break;
+                            case 4:
+                                bc.updatePlayerScore(bc.getPlayer4Score(), playerScore);
+                                break;
+                            default:
+                                // Pokud máme více než 4 hráče, můžeme přidat další logiku
+                                break;
+                        }
+                        playerIndex += 2; // Přeskočíme "PLAYER_SCORE" a samotné skóre
+                        playerCount++; // Přechod na dalšího hráče
+                    }
+                } else {
+                    playerIndex++;
+                }
+            }
 
+            // Zpracování vítěze
+            if (playerIndex < parts.length && parts[playerIndex].equals("WINNER")) {
+                String winner = parts[playerIndex + 1].trim(); // Vítěz (DEALER nebo PLAYER1)
+                bc.setLabelText("Winner: " + winner); // Nastavení vítěze
+            }
 
-        } else if (response.startsWith("RESULT")) {
+            // Konec hry
+            bc.endGame(); // Ukončení hry
+        }
+
+        else if (response.startsWith("RESULT")) {
            bc.displayResult(response.split(" ")[1]);
 
 

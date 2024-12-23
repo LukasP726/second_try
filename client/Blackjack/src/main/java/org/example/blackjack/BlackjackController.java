@@ -9,6 +9,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -21,11 +22,29 @@ public class BlackjackController {
     private Dealer dealer;
 
     @FXML
-    private HBox playerCards;
+    private HBox player1Cards;
+    @FXML
+    private Label player1Score;
+
+    @FXML
+    private HBox player2Cards;
+    @FXML
+    private Label player2Score;
+
+
+
+    @FXML
+    private HBox player3Cards;
+    @FXML
+    private Label player3Score;
+
+    @FXML
+    private HBox player4Cards;
+    @FXML
+    private Label player4Score;
+
     @FXML
     private HBox dealerCards;
-    @FXML
-    private Label playerScore;
     @FXML
     private Label dealerScore;
     @FXML
@@ -38,8 +57,10 @@ public class BlackjackController {
     private Button btnBackToLobby;
     @FXML
     private Button btnNewGame;
-
+    @FXML private VBox player3Section;
+    @FXML private VBox player4Section;
     private String ID;
+
 /*
     public void initialize() {
         try {
@@ -60,6 +81,11 @@ public class BlackjackController {
     }
     */
 
+    public void setupPlayers(int numberOfPlayers) {
+        player3Section.setVisible(numberOfPlayers >= 3);
+        player4Section.setVisible(numberOfPlayers >= 4);
+    }
+
     public void updateUi(Runnable uiTask) {
         if (Platform.isFxApplicationThread()) {
             uiTask.run();
@@ -76,6 +102,13 @@ public class BlackjackController {
     // Akce při stisknutí tlačítka "Stand"
     public void stand() {
         client.sendCommand("STAND"); // Odeslání příkazu "STAND" pomocí klienta
+        btnHit.setDisable(true);  // Povolit tlačítko "Hit"
+        btnStand.setDisable(true); // Povolit tlačítko "Stand"
+    }
+
+    public void disableButtons(){
+        btnHit.setDisable(true);  // Povolit tlačítko "Hit"
+        btnStand.setDisable(true); // Povolit tlačítko "Stand"
     }
 
     // Akce pro spuštění nové hry
@@ -91,12 +124,12 @@ public class BlackjackController {
         btnStand.setDisable(false); // Povolit tlačítko "Stand"
         btnNewGame.setDisable(true);
         btnBackToLobby.setDisable(true);
-        playerCards.getChildren().clear();
+        player1Cards.getChildren().clear();
         dealerCards.getChildren().clear();
         messageLabel.setText("New game started. Your turn!");
 
 
-        playerScore.setText("Player Score: 0");
+        player1Score.setText("Player Score: 0");
         dealerScore.setText("Dealer Score: 0");
 
         //hit(); // Hráč dostane první kartu (může být upraven
@@ -129,7 +162,7 @@ public class BlackjackController {
 
 
     // Přidání karty do GUI ruky
-    private void addCardToHand(HBox hand, String card) {
+    public void addCardToHand(HBox hand, String card) {
         ImageView cardView = new ImageView(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/cards/" + card + ".png"))));
         cardView.setFitWidth(100); // Nastavení velikosti karet
         cardView.setFitHeight(125);
@@ -141,9 +174,11 @@ public class BlackjackController {
     }
 
     public void addToPlayersHand(String card, String score){
-        addCardToHand(playerCards, card); // Přidání karty do hráčovy ruky
+        addCardToHand(player1Cards, card); // Přidání karty do hráčovy ruky
         updatePlayerScore(score);
     }
+
+
 
     public void addToDealersHand(String card){
         addCardToHand(dealerCards, card); // Přidání karty do hráčovy ruky
@@ -183,8 +218,11 @@ public class BlackjackController {
     }
     // Aktualizace skóre hráče
     private void updatePlayerScore(String score) {
-        updateScoreText(playerScore, "Player Score: " + score);
+        updateScoreText(player1Score, "Player Score: " + score);
         //playerScore.setText("Player Score: " + score);
+    }
+    public void updatePlayerScore(Label label, String score){
+        updateScoreText(label, "Player Score: " + score);
     }
 
     // Aktualizace skóre dealera
@@ -223,5 +261,28 @@ public class BlackjackController {
     }
 
 
+    public Label getPlayer2Score() {
+        return player2Score;
+    }
 
+    public Label getPlayer3Score() {
+        return player3Score;
+    }
+
+    public Label getPlayer4Score() {
+        return player4Score;
+    }
+
+
+    public HBox getPlayer2Cards() {
+        return player2Cards;
+    }
+
+    public HBox getPlayer3Cards() {
+        return player3Cards;
+    }
+
+    public HBox getPlayer4Cards() {
+        return player4Cards;
+    }
 }

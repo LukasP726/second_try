@@ -25,7 +25,9 @@ public class Main extends Application {
     @Override
     public void stop() throws Exception {
         // Zavření spojení při ukončení aplikace
-        controller.getClient().close();
+        if(controller != null && controller.getClient()!=null){
+            controller.getClient().close();
+        }
         super.stop();
     }
 
