@@ -550,7 +550,7 @@ void monitorPing(GameState& gameState) {
 
 // Funkce pro odesílání PING zpráv
 void sendPing(int client_socket) {
-    auto pingInterval = std::chrono::seconds(10);  // Interval mezi pingy
+    auto pingInterval = std::chrono::seconds(5);  // Interval mezi pingy
     auto lastPingTime = std::chrono::steady_clock::now();
 
     while (true) {

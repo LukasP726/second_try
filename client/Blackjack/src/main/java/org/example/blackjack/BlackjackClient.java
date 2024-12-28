@@ -9,6 +9,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.*;
 
 public class BlackjackClient {
@@ -20,6 +22,9 @@ public class BlackjackClient {
     private ScheduledExecutorService pingScheduler; // Plánovač pro odesílání PING
     private ExecutorService responseListener;
     private boolean running = true;
+
+    private Timer pingTimeoutTimer;
+    private final long TIMEOUT_PERIOD = 10000; // 10 sekund
 
     private String userName;
 
@@ -49,12 +54,30 @@ public class BlackjackClient {
 
         // Zahájíme poslouchání serveru
         startListeningToServer();
+        startPingTimeoutTimer(); // Spuštění detekce nečinnosti
+    }
+
+
+    private void startPingTimeoutTimer() {
+        if (pingTimeoutTimer != null) {
+            pingTimeoutTimer.cancel(); // Zastavíme předchozí timer, pokud existuje
+        }
+
+        pingTimeoutTimer = new Timer();
+        pingTimeoutTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("No response from server for " + TIMEOUT_PERIOD / 1000 + " seconds. Reconnecting...");
+                tryReconnect();
+            }
+        }, TIMEOUT_PERIOD); // Spustí se po 10 sekundách
     }
 
     private void connectToServer() throws IOException {
         while (running) {
             try {
-                System.out.println("Attempting to connect to server...");
+                System.out.println("Attempting to connect to server..."+host+":"+port);
+                //System.out.println("Attempting to connect to server...");
                 socket = new Socket(host, Integer.parseInt(port));
                 System.out.println("Connected to server: " + host + ":" + port);
 
@@ -63,6 +86,7 @@ public class BlackjackClient {
 
                 // Po připojení pošleme serveru uživatelské jméno
                 sendCommand("CONNECT|" + userName);
+                startPingTimeoutTimer(); // Restartujeme timeout timer
                 break; // Připojení úspěšné, ukončíme smyčku
             } catch (IOException e) {
                 System.out.println("Failed to connect to server. Retrying in 2 seconds...");
@@ -86,6 +110,13 @@ public class BlackjackClient {
         }
     }
 
+    private void resetPingTimeoutTimer() {
+        if (pingTimeoutTimer != null) {
+            pingTimeoutTimer.cancel(); // Zrušíme aktuální timer
+        }
+        startPingTimeoutTimer(); // Restartujeme timer
+    }
+
 
 
 
@@ -97,6 +128,8 @@ public class BlackjackClient {
                     if (message == null) {
                         throw new IOException("Server connection lost."); // Server ukončil spojení
                     }
+                    // Resetujeme timer při každé zprávě od serveru
+                    resetPingTimeoutTimer();
                     if ("PING".equals(message)) {
                         sendPong();
                     }
