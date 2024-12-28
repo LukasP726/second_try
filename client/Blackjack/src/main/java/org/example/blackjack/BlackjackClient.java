@@ -22,9 +22,11 @@ public class BlackjackClient {
     private ScheduledExecutorService pingScheduler; // Plánovač pro odesílání PING
     private ExecutorService responseListener;
     private boolean running = true;
+    private ScheduledExecutorService scheduler;
+    private final long TIMEOUT_PERIOD = 20; // 60 sekund
+    private final int MAX_RECONNECT_ATTEMPTS = 10;
+    private final long RECONNECT_DELAY = 60000;
 
-    private Timer pingTimeoutTimer;
-    private final long TIMEOUT_PERIOD = 10000; // 10 sekund
 
     private String userName;
 
@@ -50,6 +52,7 @@ public class BlackjackClient {
         // Po připojení pošleme jméno na server
         sendCommand( "CONNECT|" + userName);
         */
+        //TODO:try-catch
         connectToServer();
 
         // Zahájíme poslouchání serveru
@@ -59,23 +62,21 @@ public class BlackjackClient {
 
 
     private void startPingTimeoutTimer() {
-        if (pingTimeoutTimer != null) {
-            pingTimeoutTimer.cancel(); // Zastavíme předchozí timer, pokud existuje
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdownNow();
         }
-
-        pingTimeoutTimer = new Timer();
-        pingTimeoutTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                System.out.println("No response from server for " + TIMEOUT_PERIOD / 1000 + " seconds. Reconnecting...");
-                tryReconnect();
-            }
-        }, TIMEOUT_PERIOD); // Spustí se po 10 sekundách
+        scheduler = Executors.newScheduledThreadPool(1); // Nový časovač
+        scheduler.scheduleAtFixedRate(() -> {
+            System.out.println("No response from server for " + TIMEOUT_PERIOD + " seconds. Reconnecting...");
+            tryReconnect();
+        }, TIMEOUT_PERIOD, TIMEOUT_PERIOD, TimeUnit.SECONDS);
     }
 
+
+
     private void connectToServer() throws IOException {
-        while (running) {
-            try {
+        //while (running) {
+            //try {
                 System.out.println("Attempting to connect to server..."+host+":"+port);
                 //System.out.println("Attempting to connect to server...");
                 socket = new Socket(host, Integer.parseInt(port));
@@ -87,7 +88,8 @@ public class BlackjackClient {
                 // Po připojení pošleme serveru uživatelské jméno
                 sendCommand("CONNECT|" + userName);
                 startPingTimeoutTimer(); // Restartujeme timeout timer
-                break; // Připojení úspěšné, ukončíme smyčku
+                //break; // Připojení úspěšné, ukončíme smyčku
+                /*
             } catch (IOException e) {
                 System.out.println("Failed to connect to server. Retrying in 2 seconds...");
                 try {
@@ -95,27 +97,50 @@ public class BlackjackClient {
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                 }
-            }
+                }
+                 */
+
         }
-    }
+    //}
 
     private void tryReconnect() {
-        try {
-            connectToServer(); // Znovu navážeme připojení
-            if(running)
+        int attempts = 0;
+        boolean connected = false;
+
+        while (!connected && attempts < MAX_RECONNECT_ATTEMPTS) { // Určité maximum pokusů
+            try {
+                connectToServer(); // Pokus o připojení
+                connected = true;   // Pokud je připojení úspěšné, nastavíme connected na true
                 System.out.println("Reconnected successfully.");
-        } catch (IOException e) {
-            System.out.println("Reconnection failed. Retrying...");
-            tryReconnect(); // Rekurzivně se pokusíme znovu připojit
+            } catch (IOException e) {
+                attempts++;  // Zvyšujeme počet pokusů
+                System.out.println("Reconnection failed. Attempt " + attempts + " of " + MAX_RECONNECT_ATTEMPTS);
+
+                if (attempts < MAX_RECONNECT_ATTEMPTS) {
+                    try {
+                        Thread.sleep(RECONNECT_DELAY); // Počkej před dalším pokusem (např. 2 sekundy)
+                    } catch (InterruptedException ie) {
+                        System.out.println("Reconnect attempt interrupted.");
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!connected) {
+            System.out.println("Failed to reconnect after " + MAX_RECONNECT_ATTEMPTS + " attempts.");
+            // Můžete přidat logiku pro ukončení aplikace nebo jiný způsob, jak reagovat na neúspěšné připojení.
         }
     }
 
+
     private void resetPingTimeoutTimer() {
-        if (pingTimeoutTimer != null) {
-            pingTimeoutTimer.cancel(); // Zrušíme aktuální timer
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdownNow();
         }
-        startPingTimeoutTimer(); // Restartujeme timer
+        startPingTimeoutTimer(); // Restartování časovače
     }
+
 
 
 

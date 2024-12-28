@@ -632,9 +632,9 @@ void clientHandler(int client_socket, GameState &gameState) {
         closeSocket(client_socket);
         return;
     }
-
+    //std::thread pingThread(sendPing, client_socket);
     bool clientActive = true;
-    std::thread pingThread(sendPing, client_socket);
+
 
 
 
@@ -666,7 +666,7 @@ void clientHandler(int client_socket, GameState &gameState) {
         }
     }
 
-    pingThread.join();
+    //pingThread.join();
     closeSocket(client_socket);
 }
 
@@ -725,7 +725,7 @@ int main() {
 
         std::cout << "Client connected, starting new thread..." << std::endl;
 
-
+        std::thread(sendPing, client_socket).detach();
         std::thread(clientHandler, client_socket, std::ref(gameState)).detach();
     }
 
