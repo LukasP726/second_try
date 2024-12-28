@@ -35,6 +35,7 @@ public class BlackjackClient {
         this.userName = userName; // Uložení uživatelského jména
 
         // Připojení k serveru
+        /*
         socket = new Socket(host, port);
         System.out.println("Connected to server: " + host + ":" + port);
 
@@ -43,12 +44,47 @@ public class BlackjackClient {
 
         // Po připojení pošleme jméno na server
         sendCommand( "CONNECT|" + userName);
-
+        */
+        connectToServer();
 
         // Zahájíme poslouchání serveru
         startListeningToServer();
     }
 
+    private void connectToServer() throws IOException {
+        while (running) {
+            try {
+                System.out.println("Attempting to connect to server...");
+                socket = new Socket(host, Integer.parseInt(port));
+                System.out.println("Connected to server: " + host + ":" + port);
+
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                out = new PrintWriter(socket.getOutputStream(), true);
+
+                // Po připojení pošleme serveru uživatelské jméno
+                sendCommand("CONNECT|" + userName);
+                break; // Připojení úspěšné, ukončíme smyčku
+            } catch (IOException e) {
+                System.out.println("Failed to connect to server. Retrying in 2 seconds...");
+                try {
+                    Thread.sleep(2000); // Čekání před dalším pokusem
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+
+    private void tryReconnect() {
+        try {
+            connectToServer(); // Znovu navážeme připojení
+            if(running)
+                System.out.println("Reconnected successfully.");
+        } catch (IOException e) {
+            System.out.println("Reconnection failed. Retrying...");
+            tryReconnect(); // Rekurzivně se pokusíme znovu připojit
+        }
+    }
 
 
 
@@ -58,15 +94,18 @@ public class BlackjackClient {
             while (running) {
                 try {
                     String message = getResponse();
+                    if (message == null) {
+                        throw new IOException("Server connection lost."); // Server ukončil spojení
+                    }
                     if ("PING".equals(message)) {
                         sendPong();
                     }
                      else {
                         handleServerResponse(message);
                     }
-
                 } catch (IOException e) {
-                    System.out.println("Chyba při čtení zprávy od serveru: " + e.getMessage());
+                    System.out.println("Error: " + e.getMessage());
+                    tryReconnect();
                     break;
                 }
             }
@@ -122,6 +161,7 @@ public class BlackjackClient {
         //stopPingingServer(); // Zastavení pingování před ukončením
         if (socket != null && !socket.isClosed()) {
             socket.close();
+            running = false;
         }
     }
 
@@ -237,10 +277,10 @@ public class BlackjackClient {
             }
 
             // Zpracování vítěze
-            if (playerIndex < parts.length && parts[playerIndex].equals("WINNER")) {
-                String winner = parts[playerIndex + 1].trim(); // Vítěz (DEALER nebo PLAYER1)
+            //if (playerIndex < parts.length && parts[playerIndex].equals("WINNER")) {
+                String winner = parts[parts.length-1].trim(); // Vítěz (DEALER nebo PLAYER1)
                 bc.setLabelText("Winner: " + winner); // Nastavení vítěze
-            }
+            //}
 
             // Konec hry
             bc.endGame(); // Ukončení hry
@@ -288,6 +328,7 @@ public class BlackjackClient {
         else if (response.equals("WAITING_FOR_OPPONENT")) {
             final int delayMillis = 5000;
             System.out.println("Čekání na dalšího hráče...");
+            lc.disableAll();
             try {
                 Thread.sleep(delayMillis); // Čekání před dalším pokusem
             } catch (InterruptedException e) {

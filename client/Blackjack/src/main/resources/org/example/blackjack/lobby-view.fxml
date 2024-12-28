@@ -17,7 +17,7 @@
                 </FXCollections>
             </items>
         </ComboBox>
-        <Button text="Vytvořit místnost" onAction="#createRoom"/> <!-- Tlačítko pro vytvoření místnosti -->
+        <Button fx:id="createRoomButton" text="Vytvořit místnost" onAction="#createRoom"/> <!-- Tlačítko pro vytvoření místnosti -->
     </HBox>
 
     <Label text="Dostupné místnosti:"/>
@@ -26,7 +26,7 @@
     <!-- Tlačítka pro vstup do místnosti a obnovení seznamu -->
     <HBox alignment="CENTER" spacing="10.0">
         <Button fx:id="joinRoomButton" text="Vstoupit do místnosti" onAction="#joinRoom"/>
-        <Button text="Obnovit seznam místností" onAction="#refreshRooms"/>
+        <Button fx:id="refreshButton" text="Obnovit seznam místností" onAction="#refreshRooms"/>
     </HBox>
 
     <Label fx:id="statusLabel" text=""/>

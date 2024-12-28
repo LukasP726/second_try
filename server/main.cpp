@@ -52,6 +52,7 @@ struct PlayerState {
     bool isStanding = false;               // Indikátor, zda hráč stojí
     std::chrono::time_point<std::chrono::steady_clock> lastPingTime; // Nový atribut pro čas posledního pingu
     std::string inRoomId;
+    bool isActive = true;
 };
 
 struct Room {
@@ -116,27 +117,34 @@ std::string addPlayer(int socket, GameState &gameState) {
 // Funkce pro zpracování připojení hráče
 std::string handlePlayerConnection(int socket, const std::string &receivedId, GameState &gameState) {
     if (!receivedId.empty()) {
-        // Pokud ID existuje, zkontrolujeme, zda již není použito
         std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
+
+        // Pokud ID již existuje, aktualizujeme stav
         if (gameState.players.find(receivedId) != gameState.players.end()) {
-            std::cout << "ID already in use: " << receivedId << ". Rejecting connection." << std::endl;
-            return ""; // ID je již použito, vracíme prázdný string
+            std::cout << "Player reconnected with ID: " << receivedId << std::endl;
+
+            gameState.players[receivedId].socket = socket;
+            gameState.players[receivedId].lastPingTime = std::chrono::steady_clock::now();
+            gameState.players[receivedId].isActive = true; // Nastavíme hráče jako aktivního
+
+            return receivedId;
         }
 
-        // ID je unikátní, použijeme ho
+        // Pokud ID neexistuje, vytvoříme nového hráče
         PlayerState playerState;
         playerState.socket = socket;
-        //std::cout << "(handlePlayerConnection)Socket set to: " << playerState.socket << std::endl;
         playerState.lastPingTime = std::chrono::steady_clock::now();
+        gameState.players[receivedId] = playerState;
 
-        gameState.players[receivedId] = playerState; // Přidání hráče s tímto ID
-        std::cout << "Player connected with ID: " << receivedId << std::endl;
+        std::cout << "Player connected with new ID: " << receivedId << std::endl;
         return receivedId;
     }
 
-    // Pokud klient neposkytne ID, můžeme ho vygenerovat
+    // Pokud klient neposkytne ID, vygenerujeme nové
     return addPlayer(socket, gameState);
 }
+
+
 
 
 
@@ -151,13 +159,20 @@ std::string trim(const std::string& str) {
 
 // Pomocné funkce pro práci s kartami a skóre
 std::string getRandomCard() {
+    // Seznam karet v balíčku
     std::vector<std::string> deck = {
         "2H", "3H", "4H", "5H", "6H", "7H", "8H", "9H", "10H", "JH", "QH", "KH", "AH", // Srdce
         "2D", "3D", "4D", "5D", "6D", "7D", "8D", "9D", "10D", "JD", "QD", "KD", "AD", // Káry
         "2S", "3S", "4S", "5S", "6S", "7S", "8S", "9S", "10S", "JS", "QS", "KS", "AS", // Piky
         "2C", "3C", "4C", "5C", "6C", "7C", "8C", "9C", "10C", "JC", "QC", "KC", "AC"  // Kříže
     };
-    return deck[rand() % deck.size()];
+
+    // Použití std::random_device pro generování kvalitního náhodného čísla
+    std::random_device rd;
+    std::mt19937 gen(rd()); // Mersenne Twister engine pro náhodná čísla
+    std::uniform_int_distribution<> dis(0, deck.size() - 1); // Rozdělení pro indexy balíčku
+
+    return deck[dis(gen)]; // Náhodně vyber kartu z balíčku
 }
 
 int getCardValue(const std::string &card) {
@@ -440,7 +455,7 @@ std::string handleCommand(const std::string &command, GameState &state, const st
                             }
 
                             // Odeslání zprávy o kartách a výsledku pro hráče
-                            std::string response = dealerCards + finalDealerScore + "|" + playerCards+"\n";
+                            std::string response = dealerCards + finalDealerScore + "|" + playerCards +"PLAYER_SCORE|"+ std::to_string(y.second.playerScore) +"|WINNER|PLAYER\n";
                             std::cout << "Response on STAND: "<<response<< std::endl;
                             send(x.second.socket, response.c_str(), response.size(), 0);
                         }
@@ -560,24 +575,57 @@ void sendPing(int client_socket) {
     }
 }
 
+void reconnectThread(const std::string &playerId, GameState &gameState, int oldSocket) {
+    constexpr int reconnectWindow = 45; // v sekundách
+    auto start = std::chrono::steady_clock::now();
+
+    while (std::chrono::steady_clock::now() - start < std::chrono::seconds(reconnectWindow)) {
+        {
+            std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
+            // Pokud je hráč aktivní, ukončíme reconnect
+            if (gameState.players[playerId].isActive && gameState.players[playerId].socket != oldSocket) {
+                std::cout << "Player reconnected during reconnect window, ID: " << playerId << std::endl;
+                return;
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Krátké čekání
+    }
+
+    // Pokud hráč neprovedl reconnect v rámci časového okna
+    {
+        std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
+        if (!gameState.players[playerId].isActive) {
+            std::cout << "Reconnect window expired for client ID: " << playerId << std::endl;
+            gameState.players.erase(playerId);
+            closeSocket(oldSocket); // Zavřít starý socket
+        }
+    }
+}
+
+
+
+
+
+
 
 void clientHandler(int client_socket, GameState &gameState) {
-    // Přečteme první zprávu od klienta, která obsahuje ID
     char buffer[256];
     memset(buffer, 0, 256);
+
+    // Inicializace připojení
     int bytes_received = recv(client_socket, buffer, 256, 0);
     if (bytes_received <= 0) {
         std::cout << "Client disconnected during connection initialization." << std::endl;
         closeSocket(client_socket);
         return;
     }
-    //std::cout << "Socket: " << client_socket<< std::endl;
-    std::string initialMessage(buffer);
-    initialMessage = trim(initialMessage); // Odstranění bílých znaků
-    size_t pos1 = initialMessage.find("|");
-    std::string userName = initialMessage.substr(pos1 + 1);  // Jméno je po první |
 
-    // Rozpoznání ID klienta z úvodní zprávy
+    std::string initialMessage(buffer);
+    initialMessage = trim(initialMessage);
+
+    size_t pos1 = initialMessage.find("|");
+    std::string userName = initialMessage.substr(pos1 + 1);
+
     std::string playerId = handlePlayerConnection(client_socket, userName, gameState);
     if (playerId.empty()) {
         std::cout << "Failed to assign ID to client. Disconnecting." << std::endl;
@@ -586,43 +634,42 @@ void clientHandler(int client_socket, GameState &gameState) {
     }
 
     bool clientActive = true;
-
-    // Vytvoření nového vlákna pro odesílání PING
     std::thread pingThread(sendPing, client_socket);
 
+
+
     while (clientActive) {
-        // Přijímání zpráv od klienta
         memset(buffer, 0, 256);
         bytes_received = recv(client_socket, buffer, 256, 0);
+
         if (bytes_received <= 0) {
-            std::cout << "Client disconnected, ID: " << playerId << std::endl;
-            std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
-            gameState.players.erase(playerId);
-            clientActive = false;
-            break;
-        }
+                std::cout << "Client seems disconnected, ID: " << playerId << std::endl;
+                {
+                    std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
+                    gameState.players[playerId].isActive = false; // Nastavíme jako neaktivní
+                }
 
-        std::string command(buffer);
-        command = trim(command);
-        std::cout << "Received command: " << command << std::endl;
-        std::string response;
-
-        // Odpověď na příkaz od klienta
-        if (command == "PONG") {
-            // Aktualizace času poslední odezvy klienta
-            auto now = std::chrono::steady_clock::now();
-            std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
-            gameState.players[playerId].lastPingTime = now;
+                std::thread(reconnectThread, playerId, std::ref(gameState), client_socket).detach();
+                break;
         } else {
-            response = handleCommand(command, gameState, playerId);
-            std::cout << "Sending response: " << response << std::endl;
-            send(client_socket, response.c_str(), response.size(), 0);
-        }
+            std::string command(buffer);
+            command = trim(command);
 
+            if (command == "PONG") {
+                auto now = std::chrono::steady_clock::now();
+                std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
+                gameState.players[playerId].lastPingTime = now;
+            } else {
+                std::string response = handleCommand(command, gameState, playerId);
+                send(client_socket, response.c_str(), response.size(), 0);
+            }
+        }
     }
 
-    pingThread.join(); // Počkejte na ukončení vlákna PING
+    pingThread.join();
+    closeSocket(client_socket);
 }
+
 
 
 

@@ -29,6 +29,9 @@ public class LobbyController {
     @FXML
     private Button joinRoomButton;
 
+    @FXML
+    private Button createRoomButton;
+
     private BlackjackClient client;
 
     List<String> rooms = new ArrayList<>();
@@ -44,6 +47,12 @@ public class LobbyController {
 
     public void setClient(BlackjackClient client) {
         this.client = client;
+    }
+
+    public void disableAll(){
+        joinRoomButton.setDisable(true);
+        refreshButton.setDisable(true);
+        createRoomButton.setDisable(true);
     }
 
 
