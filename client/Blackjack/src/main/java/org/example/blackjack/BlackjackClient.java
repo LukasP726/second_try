@@ -56,8 +56,8 @@ public class BlackjackClient {
         connectToServer();
 
         // Zahájíme poslouchání serveru
-        startListeningToServer();
-        startPingTimeoutTimer(); // Spuštění detekce nečinnosti
+        //startListeningToServer();
+        //startPingTimeoutTimer(); // Spuštění detekce nečinnosti
     }
 
 
@@ -81,12 +81,14 @@ public class BlackjackClient {
                 //System.out.println("Attempting to connect to server...");
                 socket = new Socket(host, Integer.parseInt(port));
                 System.out.println("Connected to server: " + host + ":" + port);
+                System.out.println("socket: "+socket);
 
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 out = new PrintWriter(socket.getOutputStream(), true);
 
                 // Po připojení pošleme serveru uživatelské jméno
                 sendCommand("CONNECT|" + userName);
+                startListeningToServer();
                 startPingTimeoutTimer(); // Restartujeme timeout timer
                 //break; // Připojení úspěšné, ukončíme smyčku
                 /*
@@ -150,6 +152,7 @@ public class BlackjackClient {
             while (running) {
                 try {
                     String message = getResponse();
+                    System.out.println("message: "+message);
                     if (message == null) {
                         throw new IOException("Server connection lost."); // Server ukončil spojení
                     }

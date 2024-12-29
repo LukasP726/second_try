@@ -38,7 +38,7 @@
 
 //std::shared_mutex gameStateMutex;
 int commandPort = 8080; // Port pro příkazy
-std::string ipv4Address = "127.0.0.1";//192.168.1.1 127.0.0.1
+std::string ipv4Address = "192.168.1.1";//192.168.1.1 127.0.0.1
 // Zámek pro synchronizaci přístupu k socketu
 std::mutex pingMutex;
 std::mutex socketMutex;  // Globální mutex pro synchronizaci přístupu k socketu
@@ -121,13 +121,15 @@ std::string handlePlayerConnection(int socket, const std::string &receivedId, Ga
 
         // Pokud ID již existuje, aktualizujeme stav
         if (gameState.players.find(receivedId) != gameState.players.end()) {
-            std::cout << "Player reconnected with ID: " << receivedId << std::endl;
+            std::cout << "Player reconnected with ID: " << receivedId <<" and socket: "<< socket <<std::endl;
 
             gameState.players[receivedId].socket = socket;
             gameState.players[receivedId].lastPingTime = std::chrono::steady_clock::now();
             gameState.players[receivedId].isActive = true; // Nastavíme hráče jako aktivního
 
             return receivedId;
+
+
         }
 
         // Pokud ID neexistuje, vytvoříme nového hráče
@@ -136,7 +138,7 @@ std::string handlePlayerConnection(int socket, const std::string &receivedId, Ga
         playerState.lastPingTime = std::chrono::steady_clock::now();
         gameState.players[receivedId] = playerState;
 
-        std::cout << "Player connected with new ID: " << receivedId << std::endl;
+        std::cout << "Player connected with new ID: " << receivedId << " on socket: "<<socket<<std::endl;
         return receivedId;
     }
 
@@ -563,6 +565,7 @@ void sendPing(int client_socket) {
             //std::lock_guard<std::mutex> lock(pingMutex);  // Zajistíme bezpečný přístup k socketu
             std::lock_guard<std::mutex> lock(socketMutex);  // Zajistíme bezpečný přístup k socketu
             int bytes_sent = send(client_socket, pingMessage.c_str(), pingMessage.size(), 0);
+            std::cout << "PING sent on socket: "<<client_socket << std::endl;
             if (bytes_sent <= 0) {
                 std::cout << "Error sending PING message to client" << std::endl;
                 break;
