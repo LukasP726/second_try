@@ -38,7 +38,7 @@
 
 //std::shared_mutex gameStateMutex;
 int commandPort = 8080; // Port pro příkazy
-std::string ipv4Address = "127.0.0.1";//192.168.1.1 127.0.0.1
+std::string ipv4Address = "192.168.1.1";//192.168.1.1 127.0.0.1
 // Zámek pro synchronizaci přístupu k socketu
 std::mutex pingMutex;
 std::mutex socketMutex;  // Globální mutex pro synchronizaci přístupu k socketu
@@ -222,6 +222,7 @@ std::string joinRoom(const std::string &playerId, const std::string &roomId, Gam
         // Pokud je místnost stále ve stavu čekání na hráče
         if (room.isWaitingForPlayers) {
             room.players[playerId] =gameState.players[playerId]; //PlayerState(); // Přidání hráče do místnosti
+            room.currentPlayerId = playerId;
             //room.players[playerId].inRoomId = room.roomId;
             gameState.players[playerId].inRoomId = room.roomId;
             std::cout << "Player " << playerId << " joined room " << room.roomId << std::endl;
@@ -333,8 +334,18 @@ std::string handleCommand(const std::string &command, GameState &state, const st
     PlayerState &playerState = state.players[clientId];
     //std::cout << "Command recieved: " << command << std::endl;
     //std::cout << "Command substring: " << command.substr(0, 9) << std::endl;
+    if(command == "IN_GAME") {
+        std::string roomId = state.players[clientId].inRoomId;
+        auto roomIt = state.rooms.find(roomId); // Najde místnost podle roomId
+        if (roomIt != state.rooms.end()) {
+            Room &room = roomIt->second;
+            if(room.currentPlayerId == clientId) {
+                response = "YOUR_TURN";
+            }
+        }
 
-    if(command == "REFRESH") {
+    }
+    else if(command == "REFRESH") {
        response = getAllRooms(state);
 
     }
@@ -411,7 +422,7 @@ std::string handleCommand(const std::string &command, GameState &state, const st
             room.players[clientId].playerScore += getCardValue(newCard);
 
             // Broadcast karty ostatním hráčům
-            std::string broadcast = "ENEMY_CARD|" + response;
+            std::string broadcast = "ENEMY_CARD|" + response+"\n";
             for (const auto &x : room.players) {
                 if (x.first != clientId) {
                     send(x.second.socket, broadcast.c_str(), broadcast.size(), 0);

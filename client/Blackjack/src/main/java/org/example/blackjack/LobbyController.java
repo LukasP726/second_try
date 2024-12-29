@@ -129,8 +129,10 @@ public class LobbyController {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("blackjack-view.fxml"));
             Scene scene = new Scene(fxmlLoader.load());
             BlackjackController controller = fxmlLoader.getController();
+            controller.disableButtons();
             client.setBlackjackController(controller);
             client.setLobbyController(this);
+            client.sendCommand("IN_GAME");
             controller.setClient(client);
 
 

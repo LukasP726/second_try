@@ -182,7 +182,12 @@ public class BlackjackController {
 
     public void addToPlayersHand(String card, String score){
         addCardToHand(player1Cards, card); // Přidání karty do hráčovy ruky
-        updatePlayerScore(score);
+        updatePlayerScore(player1Score, score);
+    }
+
+    public void addToPlayers2Hand(String card, String score){
+        addCardToHand(player2Cards, card); // Přidání karty do hráčovy ruky
+        updatePlayerScore(player2Score, score);
     }
 
 
@@ -228,13 +233,11 @@ public class BlackjackController {
 
     }
     // Aktualizace skóre hráče
-    private void updatePlayerScore(String score) {
-        updateScoreText(player1Score, "Player Score: " + score);
+    private void updatePlayerScore(Label label, String score) {
+        updateScoreText(label, "Player Score: " + score);
         //playerScore.setText("Player Score: " + score);
     }
-    public void updatePlayerScore(Label label, String score){
-        updateScoreText(label, "Player Score: " + score);
-    }
+
 
     // Aktualizace skóre dealera
     public void updateDealerScore(String score) {

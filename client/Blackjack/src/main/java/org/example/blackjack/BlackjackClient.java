@@ -304,6 +304,7 @@ public class BlackjackClient {
         else if(response.equals("GAME_START")){
             //lc.loadBlackjackGame();
             Platform.runLater(() -> lc.loadBlackjackGame());
+
             /*
             new Thread(() -> {
                 try {
@@ -331,8 +332,14 @@ public class BlackjackClient {
         } else if (response.equals("YOUR_TURN")) {
             bc.enableButtons();
             sendCommand("YOUR_TURN|OK");
+        } else if (response.equals("ENEMY_CARDS")) {
+            String[] parts = response.split("\\|");
+            String card = parts[1];
+            bc.addToPlayers2Hand(card, parts[2]);
+
+
         } else{
-            System.out.println("zase to nefunguje");
+                System.out.println("zase to nefunguje");
         }
     }
 
