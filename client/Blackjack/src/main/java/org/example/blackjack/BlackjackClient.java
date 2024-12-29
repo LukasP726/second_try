@@ -334,7 +334,7 @@ public class BlackjackClient {
             sendCommand("YOUR_TURN|OK");
         } else if (response.equals("NOT_YOUR_TURN")) {
             bc.disableButtons();
-        } else if (response.equals("ENEMY_CARD")) {
+        } else if (response.startsWith("ENEMY_CARD")) {
             String[] parts = response.split("\\|");
             String card = parts[1];
             bc.addToPlayers2Hand(card, parts[2]);
