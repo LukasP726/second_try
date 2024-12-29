@@ -342,6 +342,9 @@ std::string handleCommand(const std::string &command, GameState &state, const st
             if(room.currentPlayerId == clientId) {
                 response = "YOUR_TURN";
             }
+            else {
+                response ="NOT_YOUR_TURN";
+            }
         }
 
     }

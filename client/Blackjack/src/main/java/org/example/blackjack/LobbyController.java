@@ -129,10 +129,8 @@ public class LobbyController {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("blackjack-view.fxml"));
             Scene scene = new Scene(fxmlLoader.load());
             BlackjackController controller = fxmlLoader.getController();
-            controller.disableButtons();
             client.setBlackjackController(controller);
             client.setLobbyController(this);
-            client.sendCommand("IN_GAME");
             controller.setClient(client);
 
 
@@ -140,6 +138,8 @@ public class LobbyController {
             stage.setTitle("Blackjack Game");
             stage.setScene(scene);
             stage.show();
+            controller.disableButtons();
+            client.sendCommand("IN_GAME");
         } catch (Exception e) {
             statusLabel.setText("Nebylo možné načíst herní okno.");
             e.printStackTrace();
