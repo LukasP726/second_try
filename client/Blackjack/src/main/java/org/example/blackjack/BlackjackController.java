@@ -94,9 +94,12 @@ public class BlackjackController {
         }
     }
 
+
+
     // Akce při stisknutí tlačítka "Hit"
     public void hit() {
         client.sendCommand("HIT"); // Odeslání příkazu "HIT" pomocí klienta
+        disableButtons();
     }
 
     // Akce při stisknutí tlačítka "Stand"
@@ -107,10 +110,14 @@ public class BlackjackController {
     }
 
     public void disableButtons(){
-        btnHit.setDisable(true);  // Povolit tlačítko "Hit"
-        btnStand.setDisable(true); // Povolit tlačítko "Stand"
+        btnHit.setDisable(true);  // Zakázat tlačítko "Hit"
+        btnStand.setDisable(true); // Zakázat tlačítko "Stand"
     }
 
+    public void enableButtons(){
+        btnHit.setDisable(false);  // Povolit tlačítko "Hit"
+        btnStand.setDisable(false); // Povolit tlačítko "Stand"
+    }
     // Akce pro spuštění nové hry
     public void newGame() {
         //client.sendCommand("NEW_GAME"); // Odeslání příkazu "NEW_GAME" pomocí klienta
@@ -181,9 +188,13 @@ public class BlackjackController {
 
 
     public void addToDealersHand(String card){
+
         addCardToHand(dealerCards, card); // Přidání karty do hráčovy ruky
     }
-
+    public void addToDealersHand(String card, String score){
+        addCardToHand(dealerCards, card); // Přidání karty do hráčovy ruky
+        updateDealerScore(score);
+    }
     @FXML
     private void backToLobby() {
         try {

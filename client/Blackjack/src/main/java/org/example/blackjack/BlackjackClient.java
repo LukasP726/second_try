@@ -89,7 +89,7 @@ public class BlackjackClient {
                 // Po připojení pošleme serveru uživatelské jméno
                 sendCommand("CONNECT|" + userName);
                 startListeningToServer();
-                startPingTimeoutTimer(); // Restartujeme timeout timer
+                //startPingTimeoutTimer(); // Restartujeme timeout timer
                 //break; // Připojení úspěšné, ukončíme smyčku
                 /*
             } catch (IOException e) {
@@ -152,12 +152,12 @@ public class BlackjackClient {
             while (running) {
                 try {
                     String message = getResponse();
-                    System.out.println("message: "+message);
+                   // System.out.println("message: "+message);
                     if (message == null) {
                         throw new IOException("Server connection lost."); // Server ukončil spojení
                     }
                     // Resetujeme timer při každé zprávě od serveru
-                    resetPingTimeoutTimer();
+                    //resetPingTimeoutTimer();
                     if ("PING".equals(message)) {
                         sendPong();
                     }
@@ -166,7 +166,7 @@ public class BlackjackClient {
                     }
                 } catch (IOException e) {
                     System.out.println("Error: " + e.getMessage());
-                    tryReconnect();
+                    //tryReconnect();
                     break;
                 }
             }
@@ -262,93 +262,25 @@ public class BlackjackClient {
             }
 
 
-        }/*
+        }else if(response.startsWith("DEALER_CARD")){
+            String[] parts = response.split("\\|");
+            String card = parts[1];
+            bc.addToDealersHand(card, parts[2]);
+
+        }
+
+        /*
         else if(response.startsWith("STAND_RECEIVED")){
             bc.disableButtons();
         }*/
-        else if (response.startsWith("DEALER_CARDS")) {
-            // Rozdělení odpovědi podle '|'
-            String[] parts = response.split("\\|");
 
-            // Zpracování karet dealera
-            int dealerCardsIndex = 1; // První index pro karty dealera
-            while (dealerCardsIndex < parts.length && !parts[dealerCardsIndex].equals("DEALER_SCORE")) {
-                String dealerCard = parts[dealerCardsIndex].trim();
-                bc.addToDealersHand(dealerCard); // Přidání karty do dealerovy ruky
-                dealerCardsIndex++;
-            }
-
-            // Zpracování skóre dealera
-            String dealerScore = parts[dealerCardsIndex + 1].trim(); // Očekáváme, že skóre je následující část po "DEALER_SCORE"
-            bc.updateDealerScore(dealerScore); // Aktualizace skóre dealera
-
-            // Zpracování karet hráčů a jejich skóre
-            int playerIndex = dealerCardsIndex + 2; // Začínáme od hráčů po skóre dealera
-            int playerCount = 2; // Počítadlo pro hráče (od Player 2 do Player 4)
-
-            while (playerIndex < parts.length) {
-                if (parts[playerIndex].equals("PLAYER_CARDS")) {
-                    // Karty hráče (například Player 2, Player 3, ...)
-                    playerIndex++; // Přesuneme se na karty
-                    while (playerIndex < parts.length && !parts[playerIndex].equals("PLAYER_SCORE")) {
-                        String playerCard = parts[playerIndex].trim();
-
-                        // Přidání karty podle hráče (používáme playerCount pro rozlišení hráčů)
-                        switch (playerCount) {
-                            case 2:
-                                bc.addCardToHand(bc.getPlayer2Cards(), playerCard);
-                                break;
-                            case 3:
-                                bc.addCardToHand(bc.getPlayer3Cards(), playerCard);
-                                break;
-                            case 4:
-                                bc.addCardToHand(bc.getPlayer4Cards(), playerCard);
-                                break;
-                            default:
-                                // Pokud máme více než 4 hráče, můžeme přidat další logiku
-                                break;
-                        }
-                        playerIndex++;
-                    }
-
-                    // Skóre hráče
-                    if (playerIndex < parts.length && parts[playerIndex].equals("PLAYER_SCORE")) {
-                        String playerScore = parts[playerIndex + 1].trim(); // Skóre hráče
-                        // Aktualizace skóre pro příslušného hráče
-                        switch (playerCount) {
-                            case 2:
-                                bc.updatePlayerScore(bc.getPlayer2Score(), playerScore);
-                                break;
-                            case 3:
-                                bc.updatePlayerScore(bc.getPlayer3Score(), playerScore);
-                                break;
-                            case 4:
-                                bc.updatePlayerScore(bc.getPlayer4Score(), playerScore);
-                                break;
-                            default:
-                                // Pokud máme více než 4 hráče, můžeme přidat další logiku
-                                break;
-                        }
-                        playerIndex += 2; // Přeskočíme "PLAYER_SCORE" a samotné skóre
-                        playerCount++; // Přechod na dalšího hráče
-                    }
-                } else {
-                    playerIndex++;
-                }
-            }
-
-            // Zpracování vítěze
-            //if (playerIndex < parts.length && parts[playerIndex].equals("WINNER")) {
-                String winner = parts[parts.length-1].trim(); // Vítěz (DEALER nebo PLAYER1)
-                bc.setLabelText("Winner: " + winner); // Nastavení vítěze
-            //}
-
-            // Konec hry
-            bc.endGame(); // Ukončení hry
-        }
 
         else if (response.startsWith("RESULT")) {
-           bc.displayResult(response.split(" ")[1]);
+            String[] parts = response.split("\\|");
+            bc.displayResult("Winner: "+parts[2]);
+            bc.endGame();
+
+
 
 
         }
@@ -396,14 +328,10 @@ public class BlackjackClient {
                 Thread.currentThread().interrupt();
                 throw new IOException("Čekání na hráče bylo přerušeno.", e);
             }
-        }
-
-
-
-
-
-
-        else{
+        } else if (response.equals("YOUR_TURN")) {
+            bc.enableButtons();
+            sendCommand("YOUR_TURN|OK");
+        } else{
             System.out.println("zase to nefunguje");
         }
     }

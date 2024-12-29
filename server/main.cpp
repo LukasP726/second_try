@@ -38,7 +38,7 @@
 
 //std::shared_mutex gameStateMutex;
 int commandPort = 8080; // Port pro příkazy
-std::string ipv4Address = "192.168.1.1";//192.168.1.1 127.0.0.1
+std::string ipv4Address = "127.0.0.1";//192.168.1.1 127.0.0.1
 // Zámek pro synchronizaci přístupu k socketu
 std::mutex pingMutex;
 std::mutex socketMutex;  // Globální mutex pro synchronizaci přístupu k socketu
@@ -61,14 +61,18 @@ struct Room {
     bool isWaitingForPlayers = true; // Indikátor, zda čekáme na další hráče
     int maxPlayers; // Maximální počet hráčů v místnosti
     bool isStanding = false;
+    std::string currentPlayerId; // ID aktuálního hráče
+
+    std::vector<std::string> dealerCards;           // Karty dealera
+    int dealerScore = 0;                            // Skóre dealera
 
     //Room(const std::string& id, int max) : roomId(id), maxPlayers(max) {}
 };
 
 // Struktura pro stav celé hry, zahrnující dealera
 struct GameState {
-    std::vector<std::string> dealerCards;           // Karty dealera
-    int dealerScore = 0;                            // Skóre dealera
+    //std::vector<std::string> dealerCards;           // Karty dealera
+    //int dealerScore = 0;                            // Skóre dealera
     //std::map<int, PlayerState> players;
     std::map<std::string, PlayerState> players;     // Mapa hráčů: <hráčské ID, stav hráče>
     std::map<std::string, Room> rooms;              // Mapa místností
@@ -387,25 +391,64 @@ std::string handleCommand(const std::string &command, GameState &state, const st
         }
     }
     else if (command == "HIT") {
-        //if(playerState.playerScore < 21) {
-            std::string newCard = getRandomCard();
-            playerState.playerCards.push_back(newCard);
-            playerState.playerScore += getCardValue(newCard);
-            response = "PLAYER_CARD|" + newCard + "|" + std::to_string(playerState.playerScore);
-            if(playerState.playerScore > 21) {
-                response += "|PLAYER_BUST";
-            }
-            else {
-                response += "|PLAYER_OK";
-            }
-        /*
+        std::string newCard = getRandomCard();
+        playerState.playerCards.push_back(newCard);
+        playerState.playerScore += getCardValue(newCard);
+
+        response = newCard + "|" + std::to_string(playerState.playerScore);
+        if (playerState.playerScore > 21) {
+            response += "|PLAYER_BUST";
+        } else {
+            response += "|PLAYER_OK";
         }
 
-        else {
-            response = "PLAYER_BUST";
-        }
-*/
+        std::string roomId = state.players[clientId].inRoomId;
+        auto roomIt = state.rooms.find(roomId); // Najde místnost podle roomId
+        if (roomIt != state.rooms.end()) {
+            Room &room = roomIt->second;
 
+            room.players[clientId].playerCards.push_back(newCard);
+            room.players[clientId].playerScore += getCardValue(newCard);
+
+            // Broadcast karty ostatním hráčům
+            std::string broadcast = "ENEMY_CARD|" + response;
+            for (const auto &x : room.players) {
+                if (x.first != clientId) {
+                    send(x.second.socket, broadcast.c_str(), broadcast.size(), 0);
+                }
+            }
+
+            // Přepnutí tahu na dalšího hráče
+            auto it = room.players.find(clientId);
+            if (it != room.players.end()) {
+                auto nextIt = std::next(it);
+                if (nextIt == room.players.end()) {
+
+                    if (room.dealerScore < 17) {
+                        std::string dealersNewCard = getRandomCard();
+                        room.dealerCards.push_back(dealersNewCard);
+                        room.dealerScore += getCardValue(dealersNewCard);
+
+                        std::string dealerCard = "DEALER_CARD|"+dealersNewCard+"|"+std::to_string(room.dealerScore);
+                        dealerCard += "\n";
+                        for (const auto &x : room.players) {
+                            send(x.second.socket, dealerCard.c_str(), dealerCard.size(), 0);
+                        }
+                    }
+
+
+
+
+                    nextIt = room.players.begin(); // Vraťte se na začátek seznamu hráčů
+                }
+                room.currentPlayerId = nextIt->first;
+
+                // Odeslání flagu dalšímu hráči
+                std::string nextPlayerFlag = "YOUR_TURN\n";
+                send(nextIt->second.socket, nextPlayerFlag.c_str(), nextPlayerFlag.size(), 0);
+            }
+        }
+        response = "PLAYER_CARD|" + response;
     } else if (command == "STAND") {
         //playerState.isStanding = true;
         std::string roomId = state.players[clientId].inRoomId;
@@ -427,48 +470,28 @@ std::string handleCommand(const std::string &command, GameState &state, const st
 
 
         if (allPlayersStanding) {
-            // Pokud všichni hráči stojí, dealer začne tahat karty
-            while (state.dealerScore < 17) {
-                std::string newCard = getRandomCard();
-                state.dealerCards.push_back(newCard);
-                state.dealerScore += getCardValue(newCard);
-            }
-
-            // Vytvoření výsledku pro všechny hráče
-            std::string dealerCards = "DEALER_CARDS|";
-            for (const auto &card : state.dealerCards) {
-                dealerCards += card + "|";
-            }
-
-            // Vytvoření finální zprávy pro všechny hráče
-            std::string finalDealerScore = "DEALER_SCORE|" + std::to_string(state.dealerScore);
-            if(room.maxPlayers == 1) {
-                response = dealerCards + finalDealerScore+"|WINNER|PLAYER";
-            }
-            else {
-            // Odeslání dat všem hráčům v místnosti
-                for (const auto &x : room.players) {
-                    for (const auto &y : state.players) {
-                        //y.first != clientId
-                        if (x.first != y.first) {  // Odesíláme všechny karty, kromě hráče, který právě spustil STAND
-                            std::string playerCards = "PLAYER_CARDS|";
-                            for (const auto &card : y.second.playerCards) {
-                                playerCards += card + "|";
-                            }
-
-                            // Odeslání zprávy o kartách a výsledku pro hráče
-                            std::string response = dealerCards + finalDealerScore + "|" + playerCards +"PLAYER_SCORE|"+ std::to_string(y.second.playerScore) +"|WINNER|PLAYER\n";
-                            std::cout << "Response on STAND: "<<response<< std::endl;
-                            send(x.second.socket, response.c_str(), response.size(), 0);
-                        }
-                    }
+            std::string result = "RESULT|";
+            int maxScore = 0;
+            std::string winner = "";
+            for (const auto &player : room.players) {
+                if(maxScore < player.second.playerScore) {
+                    maxScore = player.second.playerScore;
+                    winner = player.first;
                 }
-            }
-            // Resetování stavů po skončení hry
-            state.dealerCards.clear();
-            state.dealerScore = 0;
 
-            for (auto &player : state.players) {
+            }
+                result += std::to_string(maxScore)+"|"+winner+"\n";
+            for (const auto &player : room.players) {
+                send(player.second.socket, result.c_str(), result.size(), 0);
+            }
+
+
+            // Resetování stavů po skončení hry
+            //state.
+            room.dealerCards.clear();
+            room.dealerScore = 0;
+//state.players
+            for (auto &player : room.players) {
                 player.second.playerCards.clear();
                 player.second.playerScore = 0;
                 player.second.isStanding = false;
@@ -579,7 +602,7 @@ void sendPing(int client_socket) {
 }
 
 void reconnectThread(const std::string &playerId, GameState &gameState, int oldSocket) {
-    constexpr int reconnectWindow = 45; // v sekundách
+    constexpr int reconnectWindow = 300; // v sekundách
     auto start = std::chrono::steady_clock::now();
 
     while (std::chrono::steady_clock::now() - start < std::chrono::seconds(reconnectWindow)) {
