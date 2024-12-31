@@ -233,7 +233,7 @@ public class BlackjackController {
 
     }
     // Aktualizace skóre hráče
-    private void updatePlayerScore(Label label, String score) {
+    public void updatePlayerScore(Label label, String score) {
         updateScoreText(label, "Player Score: " + score);
         //playerScore.setText("Player Score: " + score);
     }
@@ -273,7 +273,9 @@ public class BlackjackController {
         //messageLabel.setText("Connected to server: " + client.getIp() + ":" + client.getPort());
 
     }
-
+    public Label getPlayer1Score() {
+        return player1Score;
+    }
 
     public Label getPlayer2Score() {
         return player2Score;
@@ -287,10 +289,9 @@ public class BlackjackController {
         return player4Score;
     }
 
+    public HBox getPlayer1Cards() { return player1Cards; }
 
-    public HBox getPlayer2Cards() {
-        return player2Cards;
-    }
+    public HBox getPlayer2Cards() { return player2Cards; }
 
     public HBox getPlayer3Cards() {
         return player3Cards;

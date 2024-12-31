@@ -124,7 +124,7 @@ public class LobbyController {
     }
 
     // Metoda pro načtení herního okna
-    public void loadBlackjackGame() {
+    public void loadBlackjackGame(Boolean inGame) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("blackjack-view.fxml"));
             Scene scene = new Scene(fxmlLoader.load());
@@ -139,7 +139,7 @@ public class LobbyController {
             stage.setScene(scene);
             stage.show();
             controller.disableButtons();
-            client.sendCommand("IN_GAME");
+            if(inGame) client.sendCommand("IN_GAME");
         } catch (Exception e) {
             statusLabel.setText("Nebylo možné načíst herní okno.");
             e.printStackTrace();

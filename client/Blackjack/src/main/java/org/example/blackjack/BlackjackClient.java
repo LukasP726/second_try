@@ -296,14 +296,16 @@ public class BlackjackClient {
             }
             lc.rooms(rooms);
         }
-
+        /*
         else if (response.equals("READY_TO_START")) {
             lc.loadBlackjackGame();
             //return true; // Hra může začít
         }
+
+         */
         else if(response.equals("GAME_START")){
             //lc.loadBlackjackGame();
-            Platform.runLater(() -> lc.loadBlackjackGame());
+            Platform.runLater(() -> lc.loadBlackjackGame(true));
 
             /*
             new Thread(() -> {
@@ -340,7 +342,109 @@ public class BlackjackClient {
             bc.addToPlayers2Hand(card, parts[2]);
 
 
-        } else{
+        } else if (response.startsWith("RECONNECT")) {
+            CountDownLatch latch = new CountDownLatch(1); // Vytvoření latch pro synchronizaci
+
+            // Spuštění metody loadBlackjackGame ve JavaFX vlákni
+            Platform.runLater(() -> {
+                try {
+                    lc.loadBlackjackGame(false); // Volání metody
+                } finally {
+                    latch.countDown(); // Signalizace dokončení metody
+                }
+            });
+
+            // Čekání na dokončení metody
+            try {
+                latch.await(); // Blokuje aktuální vlákno, dokud latch nedosáhne hodnoty 0
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Obnovení přerušení vlákna
+                System.err.println("Čekání na dokončení metody loadBlackjackGame bylo přerušeno");
+                return; // Ukončení bloku v případě chyby
+            }
+
+            // Pokračování v zpracování zprávy
+            // Rozdělení odpovědi podle '|'
+            String[] parts = response.split("\\|");
+
+            // Zpracování karet dealera
+            int dealerCardsIndex = 2; // První index pro karty dealera
+            while (dealerCardsIndex < parts.length && !parts[dealerCardsIndex].equals("DEALER_SCORE")) {
+                String dealerCard = parts[dealerCardsIndex].trim();
+                bc.addToDealersHand(dealerCard); // Přidání karty do dealerovy ruky
+                dealerCardsIndex++;
+            }
+
+            // Zpracování skóre dealera
+            String dealerScore = parts[dealerCardsIndex + 1].trim(); // Očekáváme, že skóre je následující část po "DEALER_SCORE"
+            bc.updateDealerScore(dealerScore); // Aktualizace skóre dealera
+
+            // Zpracování karet hráčů a jejich skóre
+            int playerIndex = dealerCardsIndex + 2; // Začínáme od hráčů po skóre dealera
+            int playerCount = 1; // Počítadlo pro hráče (od Player 1 do Player 4)
+
+            while (playerIndex < parts.length) {
+                if (parts[playerIndex].equals("PLAYER_CARDS")) {
+                    // Karty hráče (například Player 2, Player 3, ...)
+                    playerIndex++; // Přesuneme se na karty
+                    while (playerIndex < parts.length && !parts[playerIndex].equals("PLAYER_SCORE")) {
+                        String playerCard = parts[playerIndex].trim();
+
+                        // Přidání karty podle hráče (používáme playerCount pro rozlišení hráčů)
+                        switch (playerCount) {
+                            case 1:
+                                bc.addCardToHand(bc.getPlayer1Cards(), playerCard);
+                                break;
+                            case 2:
+                                bc.addCardToHand(bc.getPlayer2Cards(), playerCard);
+                                break;
+                            case 3:
+                                bc.addCardToHand(bc.getPlayer3Cards(), playerCard);
+                                break;
+                            case 4:
+                                bc.addCardToHand(bc.getPlayer4Cards(), playerCard);
+                                break;
+                            default:
+                                // Pokud máme více než 4 hráče, můžeme přidat další logiku
+                                break;
+                        }
+                        playerIndex++;
+                    }
+
+                    // Skóre hráče
+                    if (playerIndex < parts.length && parts[playerIndex].equals("PLAYER_SCORE")) {
+                        String playerScore = parts[playerIndex + 1].trim(); // Skóre hráče
+                        // Aktualizace skóre pro příslušného hráče
+                        switch (playerCount) {
+                            case 1:
+                                bc.updatePlayerScore(bc.getPlayer1Score(), playerScore);
+                                break;
+                            case 2:
+                                bc.updatePlayerScore(bc.getPlayer2Score(), playerScore);
+                                break;
+                            case 3:
+                                bc.updatePlayerScore(bc.getPlayer3Score(), playerScore);
+                                break;
+                            case 4:
+                                bc.updatePlayerScore(bc.getPlayer4Score(), playerScore);
+                                break;
+                            default:
+                                // Pokud máme více než 4 hráče, můžeme přidat další logiku
+                                break;
+                        }
+                        playerIndex += 2; // Přeskočíme "PLAYER_SCORE" a samotné skóre
+                        playerCount++; // Přechod na dalšího hráče
+                    }
+                } else {
+                    playerIndex++;
+                }
+            }
+
+        }
+
+
+
+        else{
                 System.out.println("zase to nefunguje");
         }
     }
