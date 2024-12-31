@@ -89,7 +89,7 @@ public class BlackjackClient {
                 // Po připojení pošleme serveru uživatelské jméno
                 sendCommand("CONNECT|" + userName);
                 startListeningToServer();
-                //startPingTimeoutTimer(); // Restartujeme timeout timer
+                startPingTimeoutTimer(); // Restartujeme timeout timer
                 //break; // Připojení úspěšné, ukončíme smyčku
                 /*
             } catch (IOException e) {
@@ -157,7 +157,7 @@ public class BlackjackClient {
                         throw new IOException("Server connection lost."); // Server ukončil spojení
                     }
                     // Resetujeme timer při každé zprávě od serveru
-                    //resetPingTimeoutTimer();
+                    resetPingTimeoutTimer();
                     if ("PING".equals(message)) {
                         sendPong();
                     }

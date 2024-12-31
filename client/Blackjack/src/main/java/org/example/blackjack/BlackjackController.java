@@ -55,8 +55,8 @@ public class BlackjackController {
     private Button btnStand;
     @FXML
     private Button btnBackToLobby;
-    @FXML
-    private Button btnNewGame;
+    //@FXML
+    //private Button btnNewGame;
     @FXML private VBox player3Section;
     @FXML private VBox player4Section;
     private String ID;
@@ -129,7 +129,7 @@ public class BlackjackController {
          */
         btnHit.setDisable(false);  // Povolit tlačítko "Hit"
         btnStand.setDisable(false); // Povolit tlačítko "Stand"
-        btnNewGame.setDisable(true);
+        //btnNewGame.setDisable(true);
         btnBackToLobby.setDisable(true);
         player1Cards.getChildren().clear();
         dealerCards.getChildren().clear();
@@ -260,7 +260,7 @@ public class BlackjackController {
         updateUi(() -> {
             btnHit.setDisable(true);  // Zakáže tlačítko "Hit"
             btnStand.setDisable(true); // Zakáže tlačítko "Stand"
-            btnNewGame.setDisable(false);
+            //btnNewGame.setDisable(false);
             btnBackToLobby.setDisable(false);
         });
 
