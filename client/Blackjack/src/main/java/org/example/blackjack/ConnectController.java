@@ -7,6 +7,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import java.util.regex.Pattern;
 
 public class ConnectController {
     @FXML
@@ -29,6 +30,45 @@ public class ConnectController {
         this.stage = stage;
     }
 
+
+    private static final Pattern IPV4_PATTERN = Pattern.compile(
+            "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+    );
+
+    private boolean isValidPort(String value) {
+        try {
+            int port = Integer.parseInt(value);
+            return port >= 0 && port <= 65535;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    @FXML
+    public void initialize() {
+        // Validace IP adresy
+        ipField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!IPV4_PATTERN.matcher(newValue).matches() && !newValue.isEmpty()) {
+                ipField.setStyle("-fx-border-color: red;");
+                statusLabel.setText("Invalid IP address");
+            } else {
+                ipField.setStyle(null);
+                statusLabel.setText("");
+            }
+        });
+
+        // Validace portu
+        portField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d*") || !newValue.isEmpty() && !isValidPort(newValue)) {
+                portField.setStyle("-fx-border-color: red;");
+                statusLabel.setText("Invalid port");
+            } else {
+                portField.setStyle(null);
+                statusLabel.setText("");
+            }
+        });
+    }
+
     @FXML
     private void connectToServer() {
         String ip = ipField.getText();
@@ -39,6 +79,14 @@ public class ConnectController {
             statusLabel.setText("IP, Port, and Name cannot be empty.");
             return;
         }
+
+        if (ipField.getStyle() != null || portField.getStyle() != null) {
+            statusLabel.setText("Fix invalid inputs before connecting.");
+            return;
+        }
+
+
+
 
         try {
             int port = Integer.parseInt(portText);

@@ -67,7 +67,12 @@ public class BlackjackClient {
         }
         scheduler = Executors.newScheduledThreadPool(1); // Nový časovač
         scheduler.scheduleAtFixedRate(() -> {
-            System.out.println("No response from server for " + TIMEOUT_PERIOD + " seconds. Reconnecting...");
+            String message = "No response from server for " + TIMEOUT_PERIOD + " seconds. Reconnecting...";
+            if(bc != null)
+                bc.setLabelText(message);
+            if(lc != null)
+                lc.setStatusLabel(message);
+            System.out.println(message);
             tryReconnect();
         }, TIMEOUT_PERIOD, TIMEOUT_PERIOD, TimeUnit.SECONDS);
     }
@@ -223,6 +228,10 @@ public class BlackjackClient {
         if (socket != null && !socket.isClosed()) {
             socket.close();
             running = false;
+        }
+
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdownNow();
         }
     }
 
@@ -441,7 +450,14 @@ public class BlackjackClient {
             }
 
         }
-
+        else if(response.startsWith("DISCONNECTED")){
+            String[] parts = response.split("\\|");
+            String message = "Player: "+parts[1]+" seems disconnected.";
+            if(bc != null)
+                bc.setLabelText(message);
+            if(lc != null)
+                lc.setStatusLabel(message);
+        }
 
 
         else{

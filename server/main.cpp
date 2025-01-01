@@ -299,6 +299,16 @@ std::string joinRoom(const std::string &playerId, const std::string &roomId, Gam
     }
 }
 
+void resetGame(Room &room) {
+    room.dealerCards.clear();
+    room.dealerScore = 0;
+    for (auto &player : room.players) {
+        player.second.playerCards.clear();
+        player.second.playerScore = 0;
+        player.second.isStanding = false;
+    }
+}
+
 
 std::string leaveRoom(const std::string &playerId, const std::string &roomId, GameState &gameState) {
     for (auto &roomEntry : gameState.rooms) {
@@ -307,8 +317,11 @@ std::string leaveRoom(const std::string &playerId, const std::string &roomId, Ga
             // Zkontrolujeme, zda hráč existuje v místnosti
             auto it = room.players.find(playerId);
             if (it != room.players.end()) {
+                resetGame(room);
                 room.players.erase(it);  // Odebereme hráče z místnosti
                 gameState.players[playerId].inRoomId.erase();
+                gameState.players[playerId].playerScore = 0;
+                gameState.players[playerId].playerCards.clear();
                 //gameState.players.erase(it);
                 std::cout << "Player " << playerId << " left room " << room.roomId << std::endl;
 
@@ -405,6 +418,9 @@ std::string findNextPlayer(Room &room, const std::string currentPlayerId) {
             while (nextIt != it && nextIt->second.isStanding) {
                 nextIt = std::next(nextIt);
             }
+
+            dealerDrawCard(room);
+
         }
         if (nextIt != room.players.end()) {
             return nextIt->first;
@@ -413,15 +429,7 @@ std::string findNextPlayer(Room &room, const std::string currentPlayerId) {
     return "-1"; // Pokud žádný hráč nemůže hrát
 }
 
-void resetGame(Room &room) {
-    room.dealerCards.clear();
-    room.dealerScore = 0;
-    for (auto &player : room.players) {
-        player.second.playerCards.clear();
-        player.second.playerScore = 0;
-        player.second.isStanding = false;
-    }
-}
+
 
 
 
@@ -526,7 +534,7 @@ std::string handleCommand(const std::string &command, GameState &state, const st
                 send(room.players[nextPlayerId].socket, "YOUR_TURN\n", 10, 0);
             }
 
-            dealerDrawCard(room);
+            //dealerDrawCard(room);
         }
         response = "PLAYER_CARD|" + response;
     }
@@ -559,7 +567,7 @@ std::string handleCommand(const std::string &command, GameState &state, const st
                 }
                 result = "RESULT|" + std::to_string(room.dealerScore) + "|" + (maxScore > room.dealerScore ? winner : "Dealer") + "\n";
                 broadcastToPlayers(room, result, clientId);
-                resetGame(room);
+                //resetGame(room);
             } else {
                 std::string nextPlayerId = findNextPlayer(room, clientId);
                 if (nextPlayerId != "-1") {
@@ -692,6 +700,17 @@ void reconnectThread(const std::string &playerId, GameState &gameState, int oldS
     }
 }
 
+Room* getPlayerRoom(const std::string& playerId, GameState& state) {
+    auto playerIt = state.players.find(playerId);
+    if (playerIt != state.players.end()) {
+        const std::string& roomId = playerIt->second.inRoomId;
+        auto roomIt = state.rooms.find(roomId);
+        if (roomIt != state.rooms.end()) {
+            return &roomIt->second;
+        }
+    }
+    return nullptr; // Pokud hráč nebo místnost neexistuje
+}
 
 
 
@@ -733,11 +752,19 @@ void clientHandler(int client_socket, GameState &gameState) {
         bytes_received = recv(client_socket, buffer, 256, 0);
 
         if (bytes_received <= 0) {
+                std::string message = "DISCONNECTED|"+playerId+"\n";
                 std::cout << "Client seems disconnected, ID: " << playerId << std::endl;
                 {
                     std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
                     gameState.players[playerId].isActive = false; // Nastavíme jako neaktivní
                 }
+
+                Room *room = getPlayerRoom(playerId, gameState);
+                if (room != nullptr) {
+                    broadcastToPlayers(*room, message, playerId);
+                }
+
+
 
                 //TODO:poslat klient is inactive
 

@@ -3,15 +3,36 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.Priority?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.blackjack.ConnectController">
+<VBox alignment="CENTER" spacing="20.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.blackjack.ConnectController" style="-fx-padding: 20;">
     <children>
-        <Label text="Server Connection"/>
-        <TextField fx:id="nameField" promptText="Enter your name"/>
-        <TextField fx:id="ipField" promptText="Enter IP address"/>
-        <TextField fx:id="portField" promptText="Enter Port"/>
-        <Button text="Connect" onAction="#connectToServer"/>
-        <Label fx:id="statusLabel" text=""/>
+        <!-- Hlavní nadpis -->
+        <Label text="Server Connection" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+
+        <!-- GridPane pro lepší zarovnání a flexibilitu -->
+        <GridPane hgap="10" vgap="10" maxWidth="400">
+            <columnConstraints>
+                <ColumnConstraints hgrow="ALWAYS" />
+            </columnConstraints>
+
+            <!-- Pole pro zadání jména -->
+            <TextField fx:id="nameField" promptText="Enter your name" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+
+            <!-- Pole pro zadání IP adresy -->
+            <TextField fx:id="ipField" promptText="Enter IP address" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+
+            <!-- Pole pro zadání portu -->
+            <TextField fx:id="portField" promptText="Enter Port" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+        </GridPane>
+
+        <!-- Tlačítko pro připojení -->
+        <Button text="Connect" onAction="#connectToServer" maxWidth="200" />
+
+        <!-- Štítek pro stav -->
+        <Label fx:id="statusLabel" text="" style="-fx-text-fill: red;" wrapText="true" maxWidth="400" />
     </children>
 </VBox>

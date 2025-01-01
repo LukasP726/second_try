@@ -91,7 +91,7 @@ public class LobbyController {
                 case"Solo":maxPlayers=1;break;
                 case"Duo":maxPlayers=2;break;
                 case"Trio":maxPlayers=3;break;
-                case"Quadro":maxPlayers=4;break;
+                case"Quatro":maxPlayers=4;break;
                 default: maxPlayers=1; break;
 
             }
@@ -156,6 +156,12 @@ public class LobbyController {
         roomsListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             // Pokud je vybrána místnost, aktivujeme tlačítko
             joinRoomButton.setDisable(newValue == null);
+        });
+    }
+
+    public void setStatusLabel(String text){
+        updateUi(() -> {
+            statusLabel.setText(text);
         });
     }
 
