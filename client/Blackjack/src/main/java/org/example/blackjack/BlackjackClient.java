@@ -445,7 +445,8 @@ public class BlackjackClient {
 
 
         else{
-                System.out.println("zase to nefunguje");
+                System.out.println("zase to nefunguje, response: "+response);
+
         }
     }
 
