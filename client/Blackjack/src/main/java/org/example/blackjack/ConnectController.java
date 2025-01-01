@@ -79,8 +79,8 @@ public class ConnectController {
             statusLabel.setText("IP, Port, and Name cannot be empty.");
             return;
         }
-
-        if (ipField.getStyle() != null || portField.getStyle() != null) {
+        String alert ="-fx-border-color: red;";
+        if (ipField.getStyle() == alert || portField.getStyle() == alert) {
             statusLabel.setText("Fix invalid inputs before connecting.");
             return;
         }
