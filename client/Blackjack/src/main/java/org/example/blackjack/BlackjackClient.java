@@ -270,6 +270,29 @@ public class BlackjackClient {
         }
     }
 
+    void waitForBackToLobby(){
+        CountDownLatch latch = new CountDownLatch(1); // Vytvoření latch pro synchronizaci
+
+        // Spuštění metody loadBlackjackGame ve JavaFX vlákni
+        Platform.runLater(() -> {
+            try {
+                bc.backToLobby(); // Volání metody
+            } finally {
+                latch.countDown(); // Signalizace dokončení metody
+            }
+        });
+
+        // Čekání na dokončení metody
+        try {
+            latch.await(); // Blokuje aktuální vlákno, dokud latch nedosáhne hodnoty 0
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Obnovení přerušení vlákna
+            System.err.println("Čekání na dokončení metody loadBlackjackGame bylo přerušeno");
+            return; // Ukončení bloku v případě chyby
+        }
+
+    }
+
 
     public void waitForOpponent() {
         final int maxAttempts = 20; // Maximální počet pokusů
@@ -515,17 +538,12 @@ public class BlackjackClient {
 
         else if(response.startsWith("KICKED")){
             String[] parts = response.split("\\|");
-            String message = "Player: "+parts[1]+" is unreachable. Leaving room.";
+            String message = "Player: "+parts[1]+" is unreachable.";
             if(bc != null) {
                 bc.setLabelText(message);
-                try {
-                    Thread.sleep(500); // Čekání před dalším pokusem
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new IOException("Čekání bylo přerušeno.", e);
-                }
-                bc.backToLobby();
+                //Platform.runLater(() ->  bc.backToLobby());
             }
+            waitForBackToLobby();
             if(lc != null)
                 lc.setStatusLabel(message);
 

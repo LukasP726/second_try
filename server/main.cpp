@@ -38,7 +38,7 @@
 
 //std::shared_mutex gameStateMutex;
 int commandPort = 8080; // Port pro příkazy
-std::string ipv4Address = "127.0.0.1";//192.168.1.1 127.0.0.1
+std::string ipv4Address = "192.168.1.1";//192.168.1.1 127.0.0.1
 // Zámek pro synchronizaci přístupu k socketu
 std::mutex pingMutex;
 std::mutex socketMutex;  // Globální mutex pro synchronizaci přístupu k socketu
@@ -577,7 +577,15 @@ std::string handleCommand(const std::string &command, GameState &state, const st
                         winner = player.first;
                     }
                 }
-                result = "RESULT|" + std::to_string(room.dealerScore) + "|" + (maxScore > room.dealerScore ? winner : "Dealer") + "\n";
+                result = "RESULT|" + std::to_string(room.dealerScore) + "|";
+                if(maxScore == 0) {
+                     result += "Dealer\n";
+                }
+                else {
+                    result += (maxScore < room.dealerScore && room.dealerScore<=21 ? winner : "Dealer") + "\n";
+
+                }
+                //result = "RESULT|" + std::to_string(room.dealerScore) + "|" + (maxScore < room.dealerScore ? winner : "Dealer") + "\n";
                 broadcastToPlayers(room, result, clientId);
                 //resetGame(room);
             } else {
