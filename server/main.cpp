@@ -142,7 +142,7 @@ std::string handlePlayerConnection(int socket, const std::string &receivedId, Ga
                     response += dealerCards + "|";
                 }
                 response+= "DEALER_SCORE|"+std::to_string(room.dealerScore);
-
+                //std::string rest="";"|PLAYER_ID|"+player.first+
                 for (auto &player : room.players) {
                     response += "|PLAYER_CARDS|";
                     for(auto const &playerCard : player.second.playerCards) {
@@ -316,6 +316,7 @@ void resetGame(Room &room) {
         player.second.playerCards.clear();
         player.second.playerScore = 0;
         player.second.isStanding = false;
+        player.second.inRoomId="";
     }
 }
 
@@ -498,11 +499,12 @@ std::string handleCommand(const std::string &command, GameState &state, const st
         response = joinRoom(clientId, roomId, state);
         //response = "ROOM_JOINED";
     }
-
-    else if (command.substr(0, 10) == "LEAVE_ROOM") {
+//.substr(0, 10)
+    else if (command == "LEAVE_ROOM") {
         // Extrahování roomId ze zprávy (předpokládáme, že formát je "JOIN_ROOM|roomId")
-        std::string roomId = command.substr(11);  // Ořízne "JOIN_ROOM|" a zůstane pouze roomId
-        response = leaveRoom(clientId, roomId, state);
+        //std::string roomId = command.substr(11);  // Ořízne "JOIN_ROOM|" a zůstane pouze roomId
+        Room *room = getRoomForPlayer(clientId, state);
+        response = leaveRoom(clientId, room->roomId, state);
         //response = "ROOM_JOINED";
     }
 
@@ -704,6 +706,13 @@ void reconnectThread(const std::string &playerId, GameState &gameState, int oldS
         std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
         if (!gameState.players[playerId].isActive) {
             std::cout << "Reconnect window expired for client ID: " << playerId << std::endl;
+            Room *room =getRoomForPlayer(playerId, gameState);
+            std::string message = "KICKED|"+playerId+"\n";
+            for (auto& player : room->players) {
+
+                send(player.second.socket, message.c_str(), message.size(), 0);
+            }
+            resetGame(*room);
             gameState.players.erase(playerId);
             closeSocket(oldSocket); // Zavřít starý socket
         }

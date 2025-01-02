@@ -1,6 +1,8 @@
 package org.example.blackjack;
 
 import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -61,7 +63,7 @@ public class BlackjackClient {
     }
 
 
-    private void startPingTimeoutTimer() {
+    private synchronized void startPingTimeoutTimer() {
         if (scheduler != null && !scheduler.isShutdown()) {
             scheduler.shutdownNow();
         }
@@ -141,7 +143,7 @@ public class BlackjackClient {
     }
 
 
-    private void resetPingTimeoutTimer() {
+    private synchronized void resetPingTimeoutTimer() {
         if (scheduler != null && !scheduler.isShutdown()) {
             scheduler.shutdownNow();
         }
@@ -163,6 +165,7 @@ public class BlackjackClient {
                     }
                     // Resetujeme timer při každé zprávě od serveru
                     resetPingTimeoutTimer();
+                    //startPingTimeoutTimer();
                     if ("PING".equals(message)) {
                         sendPong();
                     }
@@ -245,7 +248,7 @@ public class BlackjackClient {
 
     // Nová metoda pro připojení do místnosti
 
-    private void waitForBlackjackControllerLoad(boolean inGame){
+    private void waitForBlackjackControllerLoad(boolean inGame) {
         CountDownLatch latch = new CountDownLatch(1); // Vytvoření latch pro synchronizaci
 
         // Spuštění metody loadBlackjackGame ve JavaFX vlákni
@@ -334,9 +337,29 @@ public class BlackjackClient {
          */
         else if(response.startsWith("GAME_START")){
             waitForBlackjackControllerLoad(true);
+/*
+            CountDownLatch latch = new CountDownLatch(1); // Vytvoření latch pro synchronizaci
 
-            String data = response.substring("GAME_START|".length());
-            String[] playerIds = data.split("PLAYER_ID\\|");
+            // Spuštění metody loadBlackjackGame ve JavaFX vlákni
+            Platform.runLater(() -> {
+                try {
+                    lc.loadBlackjackGame(true); // Volání metody
+                } finally {
+                    latch.countDown(); // Signalizace dokončení metody
+                }
+            });
+
+            // Čekání na dokončení metody
+            try {
+                latch.await(); // Blokuje aktuální vlákno, dokud latch nedosáhne hodnoty 0
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Obnovení přerušení vlákna
+                System.err.println("Čekání na dokončení metody loadBlackjackGame bylo přerušeno");
+                return; // Ukončení bloku v případě chyby
+            }
+*/
+            String data = response.substring("GAME_START".length());
+            String[] playerIds = data.split("\\|PLAYER_ID\\|");
 
             for (int i = 1; i < playerIds.length; i++) {
                 bc.setPlayerText(i-1, "Player " + (i) + " ID: " + playerIds[i]);
@@ -382,7 +405,27 @@ public class BlackjackClient {
 
         } else if (response.startsWith("RECONNECT")) {
             waitForBlackjackControllerLoad(false);
+/*
+            CountDownLatch latch = new CountDownLatch(1); // Vytvoření latch pro synchronizaci
 
+            // Spuštění metody loadBlackjackGame ve JavaFX vlákni
+            Platform.runLater(() -> {
+                try {
+                    lc.loadBlackjackGame(false); // Volání metody
+                } finally {
+                    latch.countDown(); // Signalizace dokončení metody
+                }
+            });
+
+            // Čekání na dokončení metody
+            try {
+                latch.await(); // Blokuje aktuální vlákno, dokud latch nedosáhne hodnoty 0
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Obnovení přerušení vlákna
+                System.err.println("Čekání na dokončení metody loadBlackjackGame bylo přerušeno");
+                return; // Ukončení bloku v případě chyby
+            }
+*/
             // Pokračování v zpracování zprávy
             // Rozdělení odpovědi podle '|'
             String[] parts = response.split("\\|");
@@ -469,6 +512,32 @@ public class BlackjackClient {
             if(lc != null)
                 lc.setStatusLabel(message);
         }
+
+        else if(response.startsWith("KICKED")){
+            String[] parts = response.split("\\|");
+            String message = "Player: "+parts[1]+" is unreachable. Leaving room.";
+            if(bc != null) {
+                bc.setLabelText(message);
+                try {
+                    Thread.sleep(500); // Čekání před dalším pokusem
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Čekání bylo přerušeno.", e);
+                }
+                bc.backToLobby();
+            }
+            if(lc != null)
+                lc.setStatusLabel(message);
+
+
+
+        }
+
+
+
+
+
+
 
 
         else{

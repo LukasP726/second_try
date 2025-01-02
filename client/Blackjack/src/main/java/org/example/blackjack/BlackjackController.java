@@ -261,13 +261,13 @@ public class BlackjackController {
         updateDealerScore(score);
     }
     @FXML
-    private void backToLobby() {
+    public void backToLobby() {
         try {
             // Načtení FXML pro lobby scénu
             FXMLLoader loader = new FXMLLoader(getClass().getResource("lobby-view.fxml"));
             ///FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/blackjack/lobby-view.fxml"));
             Scene lobbyScene = new Scene(loader.load());
-            client.sendCommand("LEAVE_ROOM|"+client.getLobbyController().getSelectedRoom());
+            client.sendCommand("LEAVE_ROOM");
             // Získání aktuálního okna (Stage) a nastavení nové scény
             Stage stage = (Stage) btnBackToLobby.getScene().getWindow();
             //client.sendCommand("LEAVE_ROOM|"+lobbyController.getSelectedRoom());

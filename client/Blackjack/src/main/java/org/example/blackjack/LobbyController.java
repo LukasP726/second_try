@@ -135,9 +135,10 @@ public class LobbyController {
 
 
             Stage stage = (Stage) statusLabel.getScene().getWindow();
+            if(stage!=null){
             stage.setTitle("Blackjack Game");
             stage.setScene(scene);
-            stage.show();
+            stage.show();}
             controller.disableButtons();
             if(inGame) client.sendCommand("IN_GAME");
         } catch (Exception e) {
