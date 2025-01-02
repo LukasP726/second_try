@@ -38,7 +38,7 @@
 
 //std::shared_mutex gameStateMutex;
 int commandPort = 8080; // Port pro příkazy
-std::string ipv4Address = "192.168.1.1";//192.168.1.1 127.0.0.1
+std::string ipv4Address = "127.0.0.1";//192.168.1.1 127.0.0.1
 // Zámek pro synchronizaci přístupu k socketu
 std::mutex pingMutex;
 std::mutex socketMutex;  // Globální mutex pro synchronizaci přístupu k socketu
@@ -261,9 +261,7 @@ std::string joinRoom(const std::string &playerId, const std::string &roomId, Gam
         // Pokud je místnost stále ve stavu čekání na hráče
         if (room.isWaitingForPlayers) {
             room.players[playerId] =gameState.players[playerId]; //PlayerState(); // Přidání hráče do místnosti
-            //room.playersPlaying = room.players;
             room.currentPlayerId = playerId;
-            //room.players[playerId].inRoomId = room.roomId;
             gameState.players[playerId].inRoomId = room.roomId;
 
             std::cout << "Player " << playerId << " joined room " << room.roomId << std::endl;
@@ -272,23 +270,35 @@ std::string joinRoom(const std::string &playerId, const std::string &roomId, Gam
             if (room.players.size() == room.maxPlayers) {
                 room.isWaitingForPlayers = false; // Zahájit hru
                 std::cout << "Game starting in room " << room.roomId << std::endl;
-                std::string resposne = "GAME_START";
-                // Pošleme zprávu všem hráčům v místnosti, že hra začíná
+                std::string response = "GAME_START|PLAYER_ID|"+playerId;
 
-                for (const auto &player : room.players) {
-                    // Vynecháme hráče, který právě připojil a spustil tuto logiku
-                    if (player.first != playerId) {
-                        //std::cout << "JoinRoom, socket: " << player.second.socket << std::endl;
-                        // Odeslání zprávy o začátku hry každému hráči v místnosti, kromě aktuálního hráče
-                        std::lock_guard<std::mutex> lock(socketMutex);  // Synchronizace při odesílání zprávy
-                        std::string broadcast = "GAME_START\n";
-                        send(player.second.socket, broadcast.c_str(), broadcast.size(), 0);  // Předpokládám, že `socket` je uloženo v `PlayerState`
+                // Pošleme zprávu všem hráčům v místnosti, že hra začíná
+                for (const auto &player : room.players){
+                    if(player.first != playerId) {
+                        response+="|PLAYER_ID|"+player.first;
                     }
+                }
+                //response + "\n"
+                //std::string broadcast = "";
+                for (const auto &player : room.players) {
+                    std::string broadcast="GAME_START|PLAYER_ID|"+player.first;
+                    for (const auto &y : room.players) {
+                        // Vynecháme hráče, který právě připojil a spustil tuto logiku
+                        if (player.first != y.first) {
+                            broadcast+="|PLAYER_ID|"+y.first;
+                        }
+
+                    }
+                    broadcast+="\n";
+                    if(player.first != playerId) {
+                        send(player.second.socket, broadcast.c_str(), broadcast.size(), 0);
+                    }
+
                 }
 
 
                 // Odeslat i hráči, který spustil tuto funkci
-                return "GAME_START"; // Odeslat hráči zprávu, že hra začíná
+                return response; // Odeslat hráči zprávu, že hra začíná
             }
             return "WAITING_FOR_OPPONENT"; // Čekáme na dalšího hráče
         } else {

@@ -13,6 +13,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 public class BlackjackController {
@@ -20,6 +23,15 @@ public class BlackjackController {
     private Deck deck;
     private Player player;
     private Dealer dealer;
+
+    @FXML
+    private Label player1Text;
+    @FXML
+    private Label player2Text;
+    @FXML
+    private Label player3Text;
+    @FXML
+    private Label player4Text;
 
     @FXML
     private HBox player1Cards;
@@ -61,6 +73,8 @@ public class BlackjackController {
     @FXML private VBox player4Section;
     private String ID;
 
+    private List<Label> playerLabels ;
+
 /*
     public void initialize() {
         try {
@@ -80,6 +94,52 @@ public class BlackjackController {
         messageLabel.setText("Connected to server.");
     }
     */
+
+    public void setPlayer1Text(String text) {
+        updateUi(() -> {
+            player1Text.setText(text);
+        });
+    }
+
+    public void setPlayer2Text(String text) {
+        updateUi(() -> {
+            player2Text.setText(text);
+        });
+    }
+
+    public void setPlayer3Text(String text) {
+        updateUi(() -> {
+            player3Text.setText(text);
+        });
+    }
+
+    public void setPlayer4Text(String text) {
+        updateUi(() -> {
+            player4Text.setText(text);
+        });
+    }
+
+    @FXML
+    public void initialize() {
+        // Naplníme seznam labely
+        playerLabels = new ArrayList<>();
+        playerLabels.add(player1Text);
+        playerLabels.add(player2Text);
+        playerLabels.add(player3Text);
+        playerLabels.add(player4Text);
+    }
+
+    public void setPlayerText(int playerIndex, String text) {
+        if (playerIndex >= 0 && playerIndex < playerLabels.size()) {
+            updateUi(() -> {
+                playerLabels.get(playerIndex).setText(text);
+            });
+        } else {
+            System.err.println("Invalid player index: " + playerIndex);
+        }
+    }
+
+
 
     public void setupPlayers(int numberOfPlayers) {
         player3Section.setVisible(numberOfPlayers >= 3);

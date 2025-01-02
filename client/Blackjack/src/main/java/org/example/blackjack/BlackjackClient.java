@@ -245,7 +245,27 @@ public class BlackjackClient {
 
     // Nová metoda pro připojení do místnosti
 
+    private void waitForBlackjackControllerLoad(boolean inGame){
+        CountDownLatch latch = new CountDownLatch(1); // Vytvoření latch pro synchronizaci
 
+        // Spuštění metody loadBlackjackGame ve JavaFX vlákni
+        Platform.runLater(() -> {
+            try {
+                lc.loadBlackjackGame(inGame); // Volání metody
+            } finally {
+                latch.countDown(); // Signalizace dokončení metody
+            }
+        });
+
+        // Čekání na dokončení metody
+        try {
+            latch.await(); // Blokuje aktuální vlákno, dokud latch nedosáhne hodnoty 0
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Obnovení přerušení vlákna
+            System.err.println("Čekání na dokončení metody loadBlackjackGame bylo přerušeno");
+            return; // Ukončení bloku v případě chyby
+        }
+    }
 
 
     public void waitForOpponent() {
@@ -312,9 +332,18 @@ public class BlackjackClient {
         }
 
          */
-        else if(response.equals("GAME_START")){
+        else if(response.startsWith("GAME_START")){
+            waitForBlackjackControllerLoad(true);
+
+            String data = response.substring("GAME_START|".length());
+            String[] playerIds = data.split("PLAYER_ID\\|");
+
+            for (int i = 1; i < playerIds.length; i++) {
+                bc.setPlayerText(i-1, "Player " + (i) + " ID: " + playerIds[i]);
+            }
+
             //lc.loadBlackjackGame();
-            Platform.runLater(() -> lc.loadBlackjackGame(true));
+            //Platform.runLater(() -> lc.loadBlackjackGame(true));
 
             /*
             new Thread(() -> {
@@ -352,25 +381,7 @@ public class BlackjackClient {
 
 
         } else if (response.startsWith("RECONNECT")) {
-            CountDownLatch latch = new CountDownLatch(1); // Vytvoření latch pro synchronizaci
-
-            // Spuštění metody loadBlackjackGame ve JavaFX vlákni
-            Platform.runLater(() -> {
-                try {
-                    lc.loadBlackjackGame(false); // Volání metody
-                } finally {
-                    latch.countDown(); // Signalizace dokončení metody
-                }
-            });
-
-            // Čekání na dokončení metody
-            try {
-                latch.await(); // Blokuje aktuální vlákno, dokud latch nedosáhne hodnoty 0
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // Obnovení přerušení vlákna
-                System.err.println("Čekání na dokončení metody loadBlackjackGame bylo přerušeno");
-                return; // Ukončení bloku v případě chyby
-            }
+            waitForBlackjackControllerLoad(false);
 
             // Pokračování v zpracování zprávy
             // Rozdělení odpovědi podle '|'

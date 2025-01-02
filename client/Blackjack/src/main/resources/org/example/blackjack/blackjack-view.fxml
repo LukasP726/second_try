@@ -21,28 +21,28 @@
 
         <!-- Player 1 -->
         <VBox alignment="CENTER" spacing="10.0" style="-fx-padding: 5px;" GridPane.columnIndex="0">
-            <Label text="Player 1 Cards" style="-fx-font-size: 16px;"/>
+            <Label fx:id="player1Text" text="Player 1 Cards" style="-fx-font-size: 16px;"/>
             <HBox fx:id="player1Cards" alignment="CENTER" spacing="10.0"/>
             <Label fx:id="player1Score" text="Player 1 Score: 0" style="-fx-font-size: 14px;"/>
         </VBox>
 
         <!-- Player 2 -->
         <VBox alignment="CENTER" spacing="10.0" style="-fx-padding: 5px;" GridPane.columnIndex="1">
-            <Label text="Player 2 Cards" style="-fx-font-size: 16px;"/>
+            <Label fx:id="player2Text" text="Player 2 Cards" style="-fx-font-size: 16px;"/>
             <HBox fx:id="player2Cards" alignment="CENTER" spacing="10.0"/>
             <Label fx:id="player2Score" text="Player 2 Score: 0" style="-fx-font-size: 14px;"/>
         </VBox>
 
         <!-- Player 3 -->
         <VBox alignment="CENTER" spacing="10.0" style="-fx-padding: 5px;" GridPane.columnIndex="2">
-            <Label text="Player 3 Cards" style="-fx-font-size: 16px;"/>
+            <Label fx:id="player3Text" text="Player 3 Cards" style="-fx-font-size: 16px;"/>
             <HBox fx:id="player3Cards" alignment="CENTER" spacing="10.0"/>
             <Label fx:id="player3Score" text="Player 3 Score: 0" style="-fx-font-size: 14px;"/>
         </VBox>
 
         <!-- Player 4 -->
         <VBox alignment="CENTER" spacing="10.0" style="-fx-padding: 5px;" GridPane.columnIndex="3">
-            <Label text="Player 4 Cards" style="-fx-font-size: 16px;"/>
+            <Label fx:id="player4Text" text="Player 4 Cards" style="-fx-font-size: 16px;"/>
             <HBox fx:id="player4Cards" alignment="CENTER" spacing="10.0"/>
             <Label fx:id="player4Score" text="Player 4 Score: 0" style="-fx-font-size: 14px;"/>
         </VBox>
