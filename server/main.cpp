@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <mutex>
 #include <shared_mutex>
+#include <unordered_map>
 
 
 
@@ -38,10 +39,11 @@
 
 //std::shared_mutex gameStateMutex;
 int commandPort = 8080; // Port pro příkazy
-std::string ipv4Address = "192.168.1.1";//192.168.1.1 127.0.0.1
+std::string ipv4Address = "127.0.0.1";//192.168.1.1 127.0.0.1
 // Zámek pro synchronizaci přístupu k socketu
 std::mutex pingMutex;
 std::mutex socketMutex;  // Globální mutex pro synchronizaci přístupu k socketu
+
 
 
 // Struktura, která obsahuje karty a skóre hráče
@@ -76,6 +78,7 @@ struct GameState {
     //int dealerScore = 0;                            // Skóre dealera
     //std::map<int, PlayerState> players;
     std::map<std::string, PlayerState> players;     // Mapa hráčů: <hráčské ID, stav hráče>
+    std::unordered_map<std::string, std::atomic<bool>> disconnectSignals; // Signalizace odpojení
     std::map<std::string, Room> rooms;              // Mapa místností
     std::mutex gameStateMutex;
 };
@@ -142,20 +145,28 @@ std::string handlePlayerConnection(int socket, const std::string &receivedId, Ga
                     response += dealerCards + "|";
                 }
                 response+= "DEALER_SCORE|"+std::to_string(room.dealerScore);
-                //std::string rest="";"|PLAYER_ID|"+player.first+
+
+                std::string this_player="|PLAYER_ID|"+receivedId+"|PLAYER_CARDS|";
+                for(auto const &playerCard : gameState.players[receivedId].playerCards) {
+                    this_player +=  playerCard + "|";
+                }
+                this_player +="PLAYER_SCORE|"+std::to_string(gameState.players[receivedId].playerScore);
+
+
+                std::string rest="";//"|PLAYER_ID|"+player.first+
                 for (auto &player : room.players) {
-                    response += "|PLAYER_CARDS|";
-                    for(auto const &playerCard : player.second.playerCards) {
-                        response +=  playerCard + "|";
+                    if(receivedId != player.first) {
+                        rest += "|PLAYER_ID|"+player.first+"|PLAYER_CARDS|";
+                        for(auto const &playerCard : player.second.playerCards) {
+                            rest +=  playerCard + "|";
+                        }
+                        rest += "PLAYER_SCORE|"+std::to_string(player.second.playerScore);
                     }
-                    response += "PLAYER_SCORE|"+std::to_string(player.second.playerScore);
                     if(room.currentPlayerId == receivedId) {
                         turn_flag = "YOUR_TURN\n";
                     }
-
-
-
                 }
+                response += this_player + rest;
 
             }
 
@@ -582,7 +593,13 @@ std::string handleCommand(const std::string &command, GameState &state, const st
                      result += "Dealer\n";
                 }
                 else {
-                    result += (maxScore < room.dealerScore && room.dealerScore<=21 ? winner : "Dealer") + "\n";
+                    if(maxScore > room.dealerScore && room.dealerScore <= 21) {
+                        result += winner+"\n";
+                    }
+                    else {
+                        result += "Dealer\n";
+                    }
+                    //result += (maxScore < room.dealerScore && room.dealerScore>21 ? winner : "Dealer") + "\n";
 
                 }
                 //result = "RESULT|" + std::to_string(room.dealerScore) + "|" + (maxScore < room.dealerScore ? winner : "Dealer") + "\n";
@@ -608,7 +625,24 @@ std::string handleCommand(const std::string &command, GameState &state, const st
         playerState.isStanding = false;
         //response = "NEW_GAME_STARTED";
     } else {
-        response = "UNKNOWN_COMMAND";
+        Room *room = getRoomForPlayer(clientId, state);
+        std::string message = "KICKED|" + clientId + "\n";
+
+        for (auto &player : room->players) {
+            if (player.first != clientId) {
+                send(player.second.socket, message.c_str(), message.size(), 0);
+            }
+        }
+
+        resetGame(*room);
+
+        {
+            std::lock_guard<std::mutex> lock(state.gameStateMutex);
+            state.disconnectSignals[clientId] = true; // Nastavení signálu pro odpojení
+            state.players.erase(clientId);           // Odebrání hráče ze stavu
+        }
+
+        response = "DISCONNECT";
     }
 
     return response + "\n";
@@ -700,32 +734,43 @@ void reconnectThread(const std::string &playerId, GameState &gameState, int oldS
     while (std::chrono::steady_clock::now() - start < std::chrono::seconds(reconnectWindow)) {
         {
             std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
+
+            // Kontrola signálu odpojení
+            if (gameState.disconnectSignals[playerId]) {
+                std::cout << "Reconnect thread terminated for client ID: " << playerId << std::endl;
+                return;
+            }
+
             // Pokud je hráč aktivní, ukončíme reconnect
             if (gameState.players[playerId].isActive && gameState.players[playerId].socket != oldSocket) {
                 std::cout << "Player reconnected during reconnect window, ID: " << playerId << std::endl;
                 return;
             }
         }
+
         std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Krátké čekání
     }
 
     // Pokud hráč neprovedl reconnect v rámci časového okna
     {
         std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
+
         if (!gameState.players[playerId].isActive) {
             std::cout << "Reconnect window expired for client ID: " << playerId << std::endl;
-            Room *room =getRoomForPlayer(playerId, gameState);
-            std::string message = "KICKED|"+playerId+"\n";
-            for (auto& player : room->players) {
+            Room *room = getRoomForPlayer(playerId, gameState);
+            std::string message = "KICKED|" + playerId + "\n";
 
+            for (auto &player : room->players) {
                 send(player.second.socket, message.c_str(), message.size(), 0);
             }
+
             resetGame(*room);
             gameState.players.erase(playerId);
             closeSocket(oldSocket); // Zavřít starý socket
         }
     }
 }
+
 
 Room* getPlayerRoom(const std::string& playerId, GameState& state) {
     auto playerIt = state.players.find(playerId);
