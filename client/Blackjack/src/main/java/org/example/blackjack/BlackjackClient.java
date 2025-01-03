@@ -568,6 +568,12 @@ public class BlackjackClient {
             } else if (response.equals("DISCONNECT")) {
                 System.out.println("Server didnt recognize message");
                 close();
+            }else if(response.equals("PLAYER_LEFT") ||
+                     //response.equals("PLAYER_NOT_FOUND") ||
+                     //response.equals("ROOM_NOT_FOUND") ||
+                     response.equals("ROOM_FULL") ||
+                     response.equals("STAND_RECEIVED")){
+
             } else {
                 //System.out.println("zase to nefunguje, response: "+response);
                 System.out.println("Unknown response from server");
