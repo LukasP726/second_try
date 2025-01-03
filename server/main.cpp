@@ -12,6 +12,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <unordered_map>
+#include <regex>
 
 
 
@@ -867,10 +868,42 @@ void clientHandler(int client_socket, GameState &gameState) {
 
 
 
+bool isValidPort(const std::string &portStr) {
+    try {
+        int port = std::stoi(portStr);
+        return port > 0 && port <= 65535;
+    } catch (...) {
+        return false;
+    }
+}
+
+bool isValidIPv4(const std::string &ip) {
+    std::regex ipv4Regex(
+        R"(^((25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$)");
+    return std::regex_match(ip, ipv4Regex);
+}
 
 
+int main(int argc, char* argv[]) {
+    if (argc >= 2) {
+        if (isValidPort(argv[1])) {
+            commandPort = std::stoi(argv[1]); // První argument jako port
+        } else {
+            std::cerr << "Invalid port number. Please provide a value between 1 and 65535." << std::endl;
+            return 1;
+        }
+    }
 
-int main() {
+    if (argc >= 3) {
+        if (isValidIPv4(argv[2])) {
+            ipv4Address = argv[2]; // Druhý argument jako IP adresa
+        } else {
+            std::cerr << "Invalid IPv4 address. Please provide a valid address (e.g., 192.168.1.1)." << std::endl;
+            return 1;
+        }
+    }
+
+    std::cout << "Starting server on " << ipv4Address << ":" << commandPort << "..." << std::endl;
     srand(time(0)); // Inicializace generátoru náhodných čísel
 
 #ifdef _WIN32
@@ -902,7 +935,7 @@ int main() {
         return 1;
     }
 
-    std::cout << "Server listening on port 8080..." << std::endl;
+    std::cout << "Server listening on "<< ipv4Address <<":"<< commandPort <<"..." << std::endl;
     GameState gameState;
 
     while (true) {
