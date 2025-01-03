@@ -414,7 +414,7 @@ public class BlackjackClient {
                 }
             } else if (response.equals("YOUR_TURN")) {
                 bc.enableButtons();
-                sendCommand("YOUR_TURN|OK");
+                //sendCommand("YOUR_TURN|OK");
             } else if (response.equals("NOT_YOUR_TURN")) {
                 bc.disableButtons();
             } else if (response.startsWith("ENEMY_CARD")) {
