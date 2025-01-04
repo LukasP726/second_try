@@ -75,6 +75,13 @@ public class BlackjackController {
 
     private List<Label> playerLabels ;
 
+    private Stage stage;
+
+
+    public void setStage(Stage stage) {
+        this.stage = stage;
+    }
+
 /*
     public void initialize() {
         try {
@@ -165,8 +172,8 @@ public class BlackjackController {
     // Akce při stisknutí tlačítka "Stand"
     public void stand() {
         client.sendCommand("STAND"); // Odeslání příkazu "STAND" pomocí klienta
-        btnHit.setDisable(true);  // Povolit tlačítko "Hit"
-        btnStand.setDisable(true); // Povolit tlačítko "Stand"
+        btnHit.setDisable(true);  // Zakázat tlačítko "Hit"
+        btnStand.setDisable(true); // Zakázat tlačítko "Stand"
     }
 
     public void disableButtons(){
@@ -264,19 +271,25 @@ public class BlackjackController {
     public void backToLobby() {
         try {
             // Načtení FXML pro lobby scénu
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("lobby-view.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("lobby-view.fxml"));
             ///FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/blackjack/lobby-view.fxml"));
-            Scene lobbyScene = new Scene(loader.load());
+            Scene scene = new Scene(fxmlLoader.load(), 800, 600);
             client.sendCommand("LEAVE_ROOM");
             // Získání aktuálního okna (Stage) a nastavení nové scény
-            Stage stage = (Stage) btnBackToLobby.getScene().getWindow();
+            //Stage stage = (Stage) btnBackToLobby.getScene().getWindow();
+
             //client.sendCommand("LEAVE_ROOM|"+lobbyController.getSelectedRoom());
-            LobbyController lobbyController = loader.getController();
+            LobbyController lobbyController = fxmlLoader.getController();
+            //LobbyController lobbyController = client.getLobbyController();
+            lobbyController.setStage(stage);
             lobbyController.setClient(client); // Předání klienta
             client.setLobbyController(lobbyController);
-
-            stage.setScene(lobbyScene);
+            stage.setTitle("Lobby");
+            stage.setScene(scene);
+            //stage.setMaximized(true); // Okno bude maximalizováno
+            //stage.setFullScreen(false); // Fullscreen (volitelné, pokud nechcete okno s okraji)
             stage.show();
+            client.sendCommand("REFRESH");
 
 
         } catch (IOException e) {
@@ -325,6 +338,8 @@ public class BlackjackController {
         });
 
     }
+
+
 
 
     public void setClient(BlackjackClient client) {

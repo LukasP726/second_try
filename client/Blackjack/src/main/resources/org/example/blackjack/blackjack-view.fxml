@@ -1,60 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="org.example.blackjack.BlackjackController">
+<?import javafx.scene.text.*?>
 
-    <!-- Titulek -->
-    <Label text="Blackjack Game" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
-
-    <!-- Dealer's Cards Section -->
-    <VBox alignment="CENTER" spacing="10.0" style="-fx-padding: 10px;">
-        <Label text="Dealer Cards" style="-fx-font-size: 18px;"/>
-        <HBox fx:id="dealerCards" alignment="CENTER" spacing="10.0"/>
-        <Label fx:id="dealerScore" text="Dealer Score: 0" style="-fx-font-size: 14px;"/>
-    </VBox>
-
-    <!-- Players' Cards Section (GridPane pro více hráčů) -->
-    <GridPane alignment="CENTER" hgap="15" vgap="10" style="-fx-padding: 10px;">
-        <!-- Label pro "Players' Cards" -->
-        <Label text="Players' Cards" style="-fx-font-size: 18px;" GridPane.columnSpan="4"/>
-
-        <!-- Player 1 -->
-        <VBox alignment="CENTER" spacing="10.0" style="-fx-padding: 5px;" GridPane.columnIndex="0">
-            <Label fx:id="player1Text" text="Player 1 Cards" style="-fx-font-size: 16px;"/>
-            <HBox fx:id="player1Cards" alignment="CENTER" spacing="10.0"/>
-            <Label fx:id="player1Score" text="Player 1 Score: 0" style="-fx-font-size: 14px;"/>
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.example.blackjack.BlackjackController">
+    <!-- Horní část (Titulek) -->
+    <top>
+        <VBox alignment="CENTER" spacing="10.0" style="-fx-padding: 10px; -fx-background-color: #f0f0f0;">
+            <Label text="Blackjack Game" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
         </VBox>
+    </top>
 
-        <!-- Player 2 -->
-        <VBox alignment="CENTER" spacing="10.0" style="-fx-padding: 5px;" GridPane.columnIndex="1">
-            <Label fx:id="player2Text" text="Player 2 Cards" style="-fx-font-size: 16px;"/>
-            <HBox fx:id="player2Cards" alignment="CENTER" spacing="10.0"/>
-            <Label fx:id="player2Score" text="Player 2 Score: 0" style="-fx-font-size: 14px;"/>
+    <!-- Střední část (Dealer a Hráči) -->
+    <center>
+        <VBox spacing="20.0" alignment="CENTER" style="-fx-padding: 20px;">
+            <!-- Dealer Section -->
+            <VBox alignment="CENTER" spacing="10.0">
+                <Label text="Dealer Cards" style="-fx-font-size: 18px;"/>
+                <HBox fx:id="dealerCards" alignment="CENTER" spacing="10.0"/>
+                <Label fx:id="dealerScore" text="Dealer Score: 0" style="-fx-font-size: 14px;"/>
+            </VBox>
+
+            <!-- Players Section -->
+            <GridPane alignment="CENTER" hgap="15" vgap="10">
+                <!-- Player Labels -->
+                <Label text="Players' Cards" style="-fx-font-size: 18px;" GridPane.columnSpan="4"/>
+                <VBox alignment="CENTER" spacing="10.0" GridPane.columnIndex="0">
+                    <Label fx:id="player1Text" text="Player 1 Cards" style="-fx-font-size: 16px;"/>
+                    <HBox fx:id="player1Cards" alignment="CENTER" spacing="10.0"/>
+                    <Label fx:id="player1Score" text="Player 1 Score: 0" style="-fx-font-size: 14px;"/>
+                </VBox>
+                <VBox alignment="CENTER" spacing="10.0" GridPane.columnIndex="1">
+                    <Label fx:id="player2Text" text="Player 2 Cards" style="-fx-font-size: 16px;"/>
+                    <HBox fx:id="player2Cards" alignment="CENTER" spacing="10.0"/>
+                    <Label fx:id="player2Score" text="Player 2 Score: 0" style="-fx-font-size: 14px;"/>
+                </VBox>
+                <VBox alignment="CENTER" spacing="10.0" GridPane.columnIndex="2">
+                    <Label fx:id="player3Text" text="Player 3 Cards" style="-fx-font-size: 16px;"/>
+                    <HBox fx:id="player3Cards" alignment="CENTER" spacing="10.0"/>
+                    <Label fx:id="player3Score" text="Player 3 Score: 0" style="-fx-font-size: 14px;"/>
+                </VBox>
+                <VBox alignment="CENTER" spacing="10.0" GridPane.columnIndex="3">
+                    <Label fx:id="player4Text" text="Player 4 Cards" style="-fx-font-size: 16px;"/>
+                    <HBox fx:id="player4Cards" alignment="CENTER" spacing="10.0"/>
+                    <Label fx:id="player4Score" text="Player 4 Score: 0" style="-fx-font-size: 14px;"/>
+                </VBox>
+            </GridPane>
         </VBox>
+    </center>
 
-        <!-- Player 3 -->
-        <VBox alignment="CENTER" spacing="10.0" style="-fx-padding: 5px;" GridPane.columnIndex="2">
-            <Label fx:id="player3Text" text="Player 3 Cards" style="-fx-font-size: 16px;"/>
-            <HBox fx:id="player3Cards" alignment="CENTER" spacing="10.0"/>
-            <Label fx:id="player3Score" text="Player 3 Score: 0" style="-fx-font-size: 14px;"/>
+    <!-- Spodní část (Tlačítka a Zprávy) -->
+    <bottom>
+        <VBox spacing="10.0" alignment="CENTER" style="-fx-padding: 20px;">
+            <HBox alignment="CENTER" spacing="15.0">
+                <Button text="Hit" fx:id="btnHit" onAction="#hit" style="-fx-font-size: 16px;"/>
+                <Button text="Stand" fx:id="btnStand" onAction="#stand" style="-fx-font-size: 16px;"/>
+                <Button text="Back to Lobby" fx:id="btnBackToLobby" onAction="#backToLobby" style="-fx-font-size: 16px;"/>
+            </HBox>
+            <Label fx:id="messageLabel" text="Click 'New Game' to start!" style="-fx-font-size: 16px; -fx-font-style: italic;"/>
         </VBox>
-
-        <!-- Player 4 -->
-        <VBox alignment="CENTER" spacing="10.0" style="-fx-padding: 5px;" GridPane.columnIndex="3">
-            <Label fx:id="player4Text" text="Player 4 Cards" style="-fx-font-size: 16px;"/>
-            <HBox fx:id="player4Cards" alignment="CENTER" spacing="10.0"/>
-            <Label fx:id="player4Score" text="Player 4 Score: 0" style="-fx-font-size: 14px;"/>
-        </VBox>
-    </GridPane>
-
-    <!-- Action Buttons -->
-    <HBox alignment="CENTER" spacing="15.0" style="-fx-padding: 20px;">
-        <Button text="Hit" fx:id="btnHit" onAction="#hit" style="-fx-font-size: 16px;"/>
-        <Button text="Stand" fx:id="btnStand" onAction="#stand" style="-fx-font-size: 16px;"/>
-       <!-- <Button text="New Game" fx:id="btnNewGame" onAction="#newGame" style="-fx-font-size: 16px;"/>-->
-        <Button text="Back to lobby" fx:id="btnBackToLobby" onAction="#backToLobby" style="-fx-font-size: 16px;"/>
-    </HBox>
-
-    <Label fx:id="messageLabel" text="Click 'New Game' to start!" style="-fx-font-size: 16px; -fx-font-style: italic;"/>
-</VBox>
+    </bottom>
+</BorderPane>

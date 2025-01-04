@@ -18,7 +18,10 @@ public class Main extends Application {
         controller = fxmlLoader.getController();
         controller.setStage(stage);
 
+
         stage.setScene(connectScene);
+        //stage.setMaximized(true); // Okno bude maximalizováno
+        //stage.setFullScreen(false); // Fullscreen (volitelné, pokud nechcete okno s okraji)
         stage.show();
     }
 

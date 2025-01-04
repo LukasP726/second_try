@@ -3,7 +3,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.collections.FXCollections?>
 <?import java.lang.String?>
-<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.blackjack.LobbyController">
+<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.blackjack.LobbyController" prefWidth="Infinity" prefHeight="Infinity">
     <Label text="Lobby" style="-fx-font-size: 24px;"/>
 
     <!-- Seznam herních módů vedle tlačítka "Vytvořit místnost" -->

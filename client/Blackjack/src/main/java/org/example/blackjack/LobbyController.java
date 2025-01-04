@@ -11,6 +11,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.stage.Stage;
+import javafx.stage.Screen;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,6 +37,8 @@ public class LobbyController {
 
     List<String> rooms = new ArrayList<>();
 
+    private Stage stage;
+
 
     public void updateUi(Runnable uiTask) {
         if (Platform.isFxApplicationThread()) {
@@ -53,7 +56,17 @@ public class LobbyController {
         joinRoomButton.setDisable(true);
         refreshButton.setDisable(true);
         createRoomButton.setDisable(true);
+        roomsListView.setDisable(true);
     }
+
+    public void enableAll(){
+        joinRoomButton.setDisable(false);
+        refreshButton.setDisable(false);
+        createRoomButton.setDisable(false);
+        roomsListView.setDisable(false);
+    }
+
+
 
 
     @FXML
@@ -123,24 +136,52 @@ public class LobbyController {
 
     }
 
+    public void setStage(Stage stage) {
+        this.stage = stage;
+    }
+
     // Metoda pro načtení herního okna
     public void loadBlackjackGame(Boolean inGame) {
         try {
+            /*
+            Screen screen = Screen.getPrimary();
+            double screenWidth = screen.getBounds().getWidth();
+            double screenHeight = screen.getBounds().getHeight();
+*/
+// Nastavení velikosti okna
+
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("blackjack-view.fxml"));
-            Scene scene = new Scene(fxmlLoader.load());
+            Scene scene = new Scene(fxmlLoader.load(), 800, 600);
             BlackjackController controller = fxmlLoader.getController();
-            client.setBlackjackController(controller);
-            client.setLobbyController(this);
+
+            //client.setLobbyController(this);
             controller.setClient(client);
+            client.setBlackjackController(controller);
+            controller.setStage(stage); //NEW
 
 
-            Stage stage = (Stage) statusLabel.getScene().getWindow();
+            //Stage stage = (Stage) statusLabel.getScene().getWindow();
             if(stage!=null){
             stage.setTitle("Blackjack Game");
             stage.setScene(scene);
+
+                //stage.setWidth(screenWidth);
+                //stage.setHeight(screenHeight);
+/*
+                stage.setOnShown(windowEvent -> {
+                    stage.setMaximized(true);
+                    stage.setFullScreen(false); // Volitelné
+                });
+                */
+
+            //stage.setMaximized(true); // Okno bude maximalizováno
+            //stage.setFullScreen(false); // Fullscreen (volitelné, pokud nechcete okno s okraji)
             stage.show();}
             controller.disableButtons();
             if(inGame) client.sendCommand("IN_GAME");
+
+            //stage.setMaximized(true); // Okno bude maximalizováno
+            //stage.setFullScreen(false); // Fullscreen (volitelné, pokud nechcete okno s okraji)
         } catch (Exception e) {
             statusLabel.setText("Nebylo možné načíst herní okno.");
             e.printStackTrace();

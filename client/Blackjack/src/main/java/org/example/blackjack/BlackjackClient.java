@@ -74,7 +74,8 @@ public class BlackjackClient {
                 bc.setLabelText(message);
             if(lc != null)
                 lc.setStatusLabel(message);
-            System.out.println(message);
+            //System.out.println(message);
+            ClientLogger.logWarning(message);
             tryReconnect();
         }, TIMEOUT_PERIOD, TIMEOUT_PERIOD, TimeUnit.SECONDS);
     }
@@ -84,11 +85,15 @@ public class BlackjackClient {
     private void connectToServer() throws IOException {
         //while (running) {
             //try {
-                System.out.println("Attempting to connect to server..."+host+":"+port);
+                String message = "Attempting to connect to server..."+host+":"+port;
+                //System.out.println(message);
+                ClientLogger.logInfo(message);
                 //System.out.println("Attempting to connect to server...");
                 socket = new Socket(host, Integer.parseInt(port));
-                System.out.println("Connected to server: " + host + ":" + port);
-                System.out.println("socket: "+socket);
+                message = "Connected to server: " + host + ":" + port;
+                //System.out.println(message);
+                ClientLogger.logInfo(message);
+                //System.out.println("socket: "+socket);
 
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 out = new PrintWriter(socket.getOutputStream(), true);
@@ -115,16 +120,19 @@ public class BlackjackClient {
     private void tryReconnect() {
         int attempts = 0;
         boolean connected = false;
-
+        String message ="";
         while (!connected && attempts < MAX_RECONNECT_ATTEMPTS) { // Určité maximum pokusů
             try {
                 connectToServer(); // Pokus o připojení
                 connected = true;   // Pokud je připojení úspěšné, nastavíme connected na true
-                System.out.println("Reconnected successfully.");
+                message = "Reconnected successfully.";
+                //System.out.println(message);
+                ClientLogger.logInfo(message);
             } catch (IOException e) {
                 attempts++;  // Zvyšujeme počet pokusů
-                System.out.println("Reconnection failed. Attempt " + attempts + " of " + MAX_RECONNECT_ATTEMPTS);
-
+                message= "Reconnection failed. Attempt " + attempts + " of " + MAX_RECONNECT_ATTEMPTS;
+                //System.out.println(message);
+                ClientLogger.logInfo(message);
                 if (attempts < MAX_RECONNECT_ATTEMPTS) {
                     try {
                         Thread.sleep(RECONNECT_DELAY); // Počkej před dalším pokusem (např. 2 sekundy)
@@ -137,7 +145,9 @@ public class BlackjackClient {
         }
 
         if (!connected) {
-            System.out.println("Failed to reconnect after " + MAX_RECONNECT_ATTEMPTS + " attempts.");
+            message = "Failed to reconnect after " + MAX_RECONNECT_ATTEMPTS + " attempts.";
+            //System.out.println(message);
+            ClientLogger.logInfo(message);
             // Můžete přidat logiku pro ukončení aplikace nebo jiný způsob, jak reagovat na neúspěšné připojení.
         }
     }
@@ -171,6 +181,7 @@ public class BlackjackClient {
                     }
                      else {
                         handleServerResponse(message);
+
                     }
                 } catch (IOException e) {
                     System.out.println("Error: " + e.getMessage());
@@ -183,13 +194,26 @@ public class BlackjackClient {
 
 
     public void sendCommand(String command) {
-        System.out.println("Sending command to server: " + command);
+        String message = "Sending command to server: " + command;
+        if(!command.equals("PONG")){
+            ClientLogger.logInfo(message);
+        }
+        else {
+            System.out.println(message);
+        }
         out.println(command);
     }
 
     public String getResponse() throws IOException {
         String response = in.readLine();
-        System.out.println("getResponse: " + response);
+        String message = "Response from server: "+response;
+        if(!response.equals("PING")){
+            ClientLogger.logInfo(message);
+        }
+        else{
+            System.out.println(message);
+        }
+
         return response;
     }
 
@@ -293,8 +317,21 @@ public class BlackjackClient {
 
     }
 
+    public void waitForOpponent(LobbyController lc) {
+        int delayMillis = 30000;
+        lc.setStatusLabel("Waiting for opponent...");
+        lc.disableAll();
 
-    public void waitForOpponent() {
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.schedule(() -> {
+            lc.enableAll();
+            //System.out.println("Re-enabled after waiting.");
+            scheduler.shutdown(); // Ukončení plánovače
+        }, delayMillis, TimeUnit.MILLISECONDS);
+    }
+
+
+    /*public void waitForOpponent() {
         final int maxAttempts = 20; // Maximální počet pokusů
 
         for (int attempt = 0; attempt < maxAttempts; attempt++) {
@@ -303,7 +340,7 @@ public class BlackjackClient {
         }
 
     }
-
+*/
     public void handleServerResponse(String response)throws IOException{
 
         try {
@@ -356,8 +393,11 @@ public class BlackjackClient {
         }
 
          */
+
+
             else if (response.startsWith("GAME_START")) {
                 waitForBlackjackControllerLoad(true);
+
 /*
             CountDownLatch latch = new CountDownLatch(1); // Vytvoření latch pro synchronizaci
 
@@ -403,15 +443,8 @@ public class BlackjackClient {
             */
 
             } else if (response.equals("WAITING_FOR_OPPONENT")) {
-                final int delayMillis = 5000;
-                System.out.println("Čekání na dalšího hráče...");
-                lc.disableAll();
-                try {
-                    Thread.sleep(delayMillis); // Čekání před dalším pokusem
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new IOException("Čekání na hráče bylo přerušeno.", e);
-                }
+                if(lc!=null)
+                    waitForOpponent(this.lc);
             } else if (response.equals("YOUR_TURN")) {
                 bc.enableButtons();
                 //sendCommand("YOUR_TURN|OK");
@@ -425,6 +458,7 @@ public class BlackjackClient {
 
             } else if (response.startsWith("RECONNECT")) {
                 waitForBlackjackControllerLoad(false);
+                //bc.disableButtons();
 /*
             CountDownLatch latch = new CountDownLatch(1); // Vytvoření latch pro synchronizaci
 
@@ -566,23 +600,47 @@ public class BlackjackClient {
 
 
             } else if (response.equals("DISCONNECT")) {
-                System.out.println("Server didnt recognize message");
+                String message = "Server is shutting your connection down.";
+                if(bc != null) {
+                    bc.setLabelText(message);
+                }
+                else if(lc != null){
+                    lc.setStatusLabel(message);
+                }
+                System.out.println(message);
+                ClientLogger.logWarning(message);
                 close();
-            }else if(response.equals("PLAYER_LEFT") ||
+
+
+            }
+            else if (response.equals("ROOM_LIMIT")) {
+                String message = "Server has reached the limit of rooms.";
+                if(lc != null){
+                    lc.setStatusLabel(message);
+                }
+                System.out.println(message);
+                ClientLogger.logWarning(message);
+            }
+
+            else if(response.equals("PLAYER_LEFT") ||
                      //response.equals("PLAYER_NOT_FOUND") ||
-                     //response.equals("ROOM_NOT_FOUND") ||
+                     response.equals("ROOM_NOT_FOUND") ||
                      response.equals("ROOM_FULL") ||
                      response.equals("STAND_RECEIVED")){
 
             } else {
                 //System.out.println("zase to nefunguje, response: "+response);
-                System.out.println("Unknown response from server");
+                String message = "Unknown response from server";
+                System.out.println(message);
+                ClientLogger.logSevere(message);
                 close();
 
             }
         }
         catch(Exception e){
-            System.out.println("Wrong formatted message");
+            String message = "Wrongly formatted message";
+            System.out.println(message);
+            ClientLogger.logSevere(message);
             close();
         }
     }

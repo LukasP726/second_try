@@ -6,6 +6,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import java.util.regex.Pattern;
 
@@ -127,16 +128,25 @@ public class ConnectController {
     }*/
 
     private void loadLobby(BlackjackClient client) {
+        //Screen screen = Screen.getPrimary();
+        //double screenWidth = screen.getBounds().getWidth();
+        //double screenHeight = screen.getBounds().getHeight();
+
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("lobby-view.fxml"));
-            Scene scene = new Scene(fxmlLoader.load());
+            Scene scene = new Scene(fxmlLoader.load(), 800, 600);
             LobbyController lobbyController = fxmlLoader.getController();
             lobbyController.setClient(client); // Předání klienta
+            lobbyController.setStage(stage);
             client.setLobbyController(lobbyController);
-
             stage.setTitle("Lobby");
             stage.setScene(scene);
+            //stage.setWidth(screenWidth);
+            //stage.setHeight(screenHeight);
+            //stage.setMaximized(true); // Okno bude maximalizováno
+            //stage.setFullScreen(false); // Fullscreen (volitelné, pokud nechcete okno s okraji)
             stage.show();
+            client.sendCommand("REFRESH");
         } catch (Exception e) {
             statusLabel.setText("Failed to load lobby window.");
             e.printStackTrace();
