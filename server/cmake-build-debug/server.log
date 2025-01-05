@@ -1,0 +1,61 @@
+[2025-01-05 18:48:29] Starting server on 127.0.0.1 :8080...
+[2025-01-05 18:48:29] Limit for rooms: 50
+[2025-01-05 18:48:29] Limit for players: 50
+[2025-01-05 18:48:37] Starting server on 127.0.0.1 :8080...
+[2025-01-05 18:48:37] Limit for rooms: 50
+[2025-01-05 18:48:37] Limit for players: 50
+[2025-01-05 18:48:45] Starting server on 127.0.0.1 :8080...
+[2025-01-05 18:48:46] Limit for rooms: 50
+[2025-01-05 18:48:46] Limit for players: 50
+[2025-01-05 18:49:06] Player connected with new ID: win on socket: 208
+[2025-01-05 18:49:10] Player win created room e0d65b26-9b62c-f3606-305a3-d9d46787a
+[2025-01-05 18:49:14] Player win joined room e0d65b26-9b62c-f3606-305a3-d9d46787a
+[2025-01-05 18:49:14] Game starting in room e0d65b26-9b62c-f3606-305a3-d9d46787a
+[2025-01-05 18:49:19] Player win left room e0d65b26-9b62c-f3606-305a3-d9d46787a
+[2025-01-05 18:49:21] Player win joined room e0d65b26-9b62c-f3606-305a3-d9d46787a
+[2025-01-05 18:49:21] Game starting in room e0d65b26-9b62c-f3606-305a3-d9d46787a
+[2025-01-05 18:49:28] Player win left room e0d65b26-9b62c-f3606-305a3-d9d46787a
+[2025-01-05 18:49:32] Client seems disconnected, ID: win
+[2025-01-05 18:51:18] Player reconnected with ID: win and socket: 308
+[2025-01-05 18:51:18] Player reconnected during reconnect window, ID: win
+[2025-01-05 18:55:55] Starting server on 127.0.0.1 :8080...
+[2025-01-05 18:55:55] Limit for rooms: 50
+[2025-01-05 18:55:55] Limit for players: 50
+[2025-01-05 18:56:04] Player connected with new ID: win on socket: 148
+[2025-01-05 18:56:07] Error processing command: stoi
+[2025-01-05 18:58:58] Starting server on 127.0.0.1 :8080...
+[2025-01-05 18:58:58] Limit for rooms: 50
+[2025-01-05 18:58:58] Limit for players: 50
+[2025-01-05 18:59:19] Player connected with new ID: win on socket: 244
+[2025-01-05 19:02:39] Starting server on 127.0.0.1 :8080...
+[2025-01-05 19:02:39] Limit for rooms: 50
+[2025-01-05 19:02:39] Limit for players: 50
+[2025-01-05 19:02:45] Player connected with new ID: win on socket: 240
+[2025-01-05 19:05:50] Starting server on 127.0.0.1 :8080...
+[2025-01-05 19:05:50] Limit for rooms: 50
+[2025-01-05 19:05:50] Limit for players: 50
+[2025-01-05 19:05:52] Player connected with new ID: win on socket: 248
+[2025-01-05 19:05:54] Standard exception caught: stoi
+[2025-01-05 19:08:09] Starting server on 127.0.0.1 :8080...
+[2025-01-05 19:08:09] Limit for rooms: 50
+[2025-01-05 19:08:09] Limit for players: 50
+[2025-01-05 19:08:12] Player connected with new ID: win on socket: 260
+[2025-01-05 19:08:13] Client seems disconnected, ID: win
+[2025-01-05 19:08:23] Player reconnected with ID: win and socket: 272
+[2025-01-05 19:08:23] Player reconnected during reconnect window, ID: win
+[2025-01-05 19:08:26] Standard exception caught: stoi
+[2025-01-05 19:08:54] Starting server on 127.0.0.1 :8080...
+[2025-01-05 19:08:54] Limit for rooms: 50
+[2025-01-05 19:08:54] Limit for players: 50
+[2025-01-05 19:09:21] Player connected with new ID: win on socket: 224
+[2025-01-05 19:09:25] Standard exception caught: stoi
+[2025-01-05 19:11:05] Starting server on 127.0.0.1 :8080...
+[2025-01-05 19:11:05] Limit for rooms: 50
+[2025-01-05 19:11:05] Limit for players: 50
+[2025-01-05 19:11:17] Player connected with new ID: win on socket: 252
+[2025-01-05 19:11:20] Standard exception caught: stoi
+[2025-01-05 19:14:30] Starting server on 127.0.0.1 :8080...
+[2025-01-05 19:14:30] Limit for rooms: 50
+[2025-01-05 19:14:30] Limit for players: 50
+[2025-01-05 19:14:42] Player connected with new ID: win on socket: 180
+[2025-01-05 19:14:44] Standard exception caught: stoi

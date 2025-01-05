@@ -526,6 +526,44 @@ std::string findNextPlayer(Room &room, const std::string currentPlayerId) {
 }
 
 
+std::string disconnect(const std::string clientId, GameState &state){
+    Room *room = getRoomForPlayer(clientId, state);
+    std::string message = "KICKED|" + clientId + "\n";
+
+    for (auto &player : room->players) {
+        if (player.first != clientId) {
+            send(player.second.socket, message.c_str(), message.size(), 0);
+        }
+    }
+
+    resetGame(*room, state);
+
+
+    {
+        std::lock_guard<std::mutex> lock(state.gameStateMutex);
+        state.disconnectSignals[clientId] = true; // Nastavení signálu pro odpojení
+        state.players.erase(clientId);           // Odebrání hráče ze stavu
+    }
+
+    return "DISCONNECT";
+}
+
+std::string substringTryCatch(std::string command, int startIndex, int endIndex, GameState &state, std::string clientId) {
+    try {
+        if(endIndex != -1) {
+            return command.substr(startIndex, endIndex);
+        }
+        else { return command.substr(startIndex);}
+
+    }catch (const std::exception &e) {
+        // Logování chyby
+        logMessage("Error processing command: " + std::string(e.what()));
+        disconnect(clientId, state);
+        return "-1";
+
+    }
+
+}
 
 
 
@@ -533,181 +571,179 @@ std::string findNextPlayer(Room &room, const std::string currentPlayerId) {
 // Funkce pro zpracování příkazů a aktualizaci stavu hry
 //int clientId
 std::string handleCommand(const std::string &command, GameState &state, const std::string &clientId) {
+    //
     std::string response;
     //int clientId
     PlayerState &playerState = state.players[clientId];
     //std::cout << "Command recieved: " << command << std::endl;
     //std::cout << "Command substring: " << command.substr(0, 9) << std::endl;
-    if(command == "IN_GAME") {
-        std::string roomId = state.players[clientId].inRoomId;
-        auto roomIt = state.rooms.find(roomId); // Najde místnost podle roomId
-        if (roomIt != state.rooms.end()) {
-            Room &room = roomIt->second;
-            if(room.currentPlayerId == clientId) {
-                response = "YOUR_TURN";
-            }
-            else {
-                response ="NOT_YOUR_TURN";
-            }
-        }
-
-    }
-    else if(command == "REFRESH") {
-       response = getAllRooms(state);
-
-    }
-    else if (command.substr(0, 11) == "CREATE_ROOM") {
-        if(maxRooms > state.rooms.size()) {
-
-
-            size_t separatorPos = command.find('|');
-            if (separatorPos != std::string::npos) {
-                // Extrahování maxPlayers
-                std::string maxPlayersStr = command.substr(separatorPos + 1);
-                int maxPlayers = std::stoi(maxPlayersStr); // Převod na číslo
-
-                // Generování ID místnosti
-                std::string roomId = generateUUID();
-                Room newRoom;
-                newRoom.roomId = roomId;
-                newRoom.maxPlayers = maxPlayers; // Nastavení maximálního počtu hráčů
-                state.rooms[roomId] = newRoom; // Přidání nové místnosti do stavu
-                std::string message = "Player "+ clientId + " created room " + roomId;
-                std::cout << message << std::endl;
-                logMessage(message);
-                // Odpověď na klienta
-                response = getAllRooms(state);
-            }   else {
-                // Chybné formátování zprávy
-                response = "ERROR:INVALID_COMMAND_FORMAT";
-            }
-        }
-
-        else {
-            response = "ROOM_LIMIT";
-        }
-
-    }
-    else if (command.substr(0, 9) == "JOIN_ROOM") {
-        // Extrahování roomId ze zprávy (předpokládáme, že formát je "JOIN_ROOM|roomId")
-        std::string roomId = command.substr(10);  // Ořízne "JOIN_ROOM|" a zůstane pouze roomId
-        response = joinRoom(clientId, roomId, state);
-        //response = "ROOM_JOINED";
-    }
-//.substr(0, 10)
-    else if (command == "LEAVE_ROOM") {
-        // Extrahování roomId ze zprávy (předpokládáme, že formát je "JOIN_ROOM|roomId")
-        //std::string roomId = command.substr(11);  // Ořízne "JOIN_ROOM|" a zůstane pouze roomId
-        Room *room = getRoomForPlayer(clientId, state);
-        response = leaveRoom(clientId, room->roomId, state);
-        //response = "ROOM_JOINED";
-    }
-
-    else if (command == "WAIT_FOR_OPPONENT") {
-        //response = "OPPONENT_JOINED";
-
-        Room* room = getRoomForPlayer(clientId, state); // Získání místnosti, ve které je hráč připojen
-
-        if (room != nullptr) {
-            if (room->players.size() >= room->maxPlayers) {
-                room->isWaitingForPlayers = false;
-                response = "READY_TO_START"; // Odpověď, že hra může začít
-            } else {
-                response = "WAITING_FOR_OPPONENT"; // Odpověď, že čekáme na dalšího hráče
-            }
-        } else {
-            response = "ERROR_NO_ROOM"; // Pokud hráč není v žádné místnosti
-        }
-    }
-    else if (command == "HIT") {
-        std::string newCard = getRandomCard();
-        addCardToPlayer(playerState, newCard);
-
-        response = newCard + "|" + std::to_string(playerState.playerScore);
-        response += (playerState.playerScore > 21) ? "|PLAYER_BUST" : "|PLAYER_OK";
-
-        std::string roomId = state.players[clientId].inRoomId;
-        auto roomIt = state.rooms.find(roomId);
-        if (roomIt != state.rooms.end()) {
-            Room &room = roomIt->second;
-            addCardToPlayer(room.players[clientId], newCard);
-
-            std::string broadcast = "ENEMY_CARD|" + response + "\n";
-            broadcastToPlayers(room, broadcast, clientId);
-
-            std::string nextPlayerId = findNextPlayer(room, clientId);
-            if (nextPlayerId != "-1") {
-                room.currentPlayerId = nextPlayerId;
-                send(room.players[nextPlayerId].socket, "YOUR_TURN\n", 10, 0);
-            }
-
-            //dealerDrawCard(room);
-        }
-        response = "PLAYER_CARD|" + response;
-    }
-    else if (command == "STAND") {
-        std::string roomId = state.players[clientId].inRoomId;
-        auto roomIt = state.rooms.find(roomId);
-        std::string result = "";
-        bool allPlayersStanding = true;
-
-        if (roomIt != state.rooms.end()) {
-            Room &room = roomIt->second;
-            room.players[clientId].isStanding = true;
-            state.players[clientId].isStanding = true;
-
-            for (const auto &player : room.players) {
-                if (!player.second.isStanding) {
-                    allPlayersStanding = false;
-                    break;
+    try{
+        if(command == "IN_GAME") {
+            std::string roomId = state.players[clientId].inRoomId;
+            auto roomIt = state.rooms.find(roomId); // Najde místnost podle roomId
+            if (roomIt != state.rooms.end()) {
+                Room &room = roomIt->second;
+                if(room.currentPlayerId == clientId) {
+                    response = "YOUR_TURN";
+                }
+                else {
+                    response ="NOT_YOUR_TURN";
                 }
             }
 
-            if (allPlayersStanding) {
-                while(dealerDrawCard(room));
-                result = getResult(room);
-                //result = "RESULT|" + std::to_string(room.dealerScore) + "|" + (maxScore < room.dealerScore ? winner : "Dealer") + "\n";
-                broadcastToPlayers(room, result, clientId);
-                //resetGame(room);
+        }
+        else if(command == "REFRESH") {
+            response = getAllRooms(state);
+
+        }
+        //command.substr(0, 11) == "CREATE_ROOM"
+        //substringTryCatch(command,0,11,state, clientId) == "CREATE_ROOM"
+        else if (command.substr(0, 11) == "CREATE_ROOM") {
+            if(maxRooms > state.rooms.size()) {
+
+
+                size_t separatorPos = command.find('|');
+                if (separatorPos != std::string::npos) {
+                    // Extrahování maxPlayers
+                    std::string maxPlayersStr = command.substr(separatorPos + 1);
+                    //std::string maxPlayersStr = substringTryCatch(command,separatorPos+1,-1,state, clientId);
+                    int maxPlayers = std::stoi(maxPlayersStr); // Převod na číslo
+
+                    // Generování ID místnosti
+                    std::string roomId = generateUUID();
+                    Room newRoom;
+                    newRoom.roomId = roomId;
+                    newRoom.maxPlayers = maxPlayers; // Nastavení maximálního počtu hráčů
+                    state.rooms[roomId] = newRoom; // Přidání nové místnosti do stavu
+                    std::string message = "Player "+ clientId + " created room " + roomId;
+                    std::cout << message << std::endl;
+                    logMessage(message);
+                    // Odpověď na klienta
+                    response = getAllRooms(state);
+                }   else {
+                    // Chybné formátování zprávy
+                    response = "ERROR:INVALID_COMMAND_FORMAT";
+                }
+            }
+
+            else {
+                response = "ROOM_LIMIT";
+            }
+
+        }
+        //command.substr(0, 9) == "JOIN_ROOM"
+        //substringTryCatch(command,0,9,state, clientId) == "JOIN_ROOM"
+        else if (command.substr(0, 9) == "JOIN_ROOM") {
+            // Extrahování roomId ze zprávy (předpokládáme, že formát je "JOIN_ROOM|roomId")
+            std::string roomId = command.substr(10);  // Ořízne "JOIN_ROOM|" a zůstane pouze roomId
+            //std::string roomId = substringTryCatch(command,10,-1,state, clientId);
+            response = joinRoom(clientId, roomId, state);
+            //response = "ROOM_JOINED";
+        }
+        //.substr(0, 10)
+        else if (command == "LEAVE_ROOM") {
+            // Extrahování roomId ze zprávy (předpokládáme, že formát je "JOIN_ROOM|roomId")
+            //std::string roomId = command.substr(11);  // Ořízne "JOIN_ROOM|" a zůstane pouze roomId
+            Room *room = getRoomForPlayer(clientId, state);
+            response = leaveRoom(clientId, room->roomId, state);
+            //response = "ROOM_JOINED";
+        }
+
+        else if (command == "WAIT_FOR_OPPONENT") {
+            //response = "OPPONENT_JOINED";
+
+            Room* room = getRoomForPlayer(clientId, state); // Získání místnosti, ve které je hráč připojen
+
+            if (room != nullptr) {
+                if (room->players.size() >= room->maxPlayers) {
+                    room->isWaitingForPlayers = false;
+                    response = "READY_TO_START"; // Odpověď, že hra může začít
+                } else {
+                    response = "WAITING_FOR_OPPONENT"; // Odpověď, že čekáme na dalšího hráče
+                }
             } else {
+                response = "ERROR_NO_ROOM"; // Pokud hráč není v žádné místnosti
+            }
+        }
+        else if (command == "HIT") {
+            std::string newCard = getRandomCard();
+            addCardToPlayer(playerState, newCard);
+
+            response = newCard + "|" + std::to_string(playerState.playerScore);
+            response += (playerState.playerScore > 21) ? "|PLAYER_BUST" : "|PLAYER_OK";
+
+            std::string roomId = state.players[clientId].inRoomId;
+            auto roomIt = state.rooms.find(roomId);
+            if (roomIt != state.rooms.end()) {
+                Room &room = roomIt->second;
+                addCardToPlayer(room.players[clientId], newCard);
+
+                std::string broadcast = "ENEMY_CARD|" + response + "\n";
+                broadcastToPlayers(room, broadcast, clientId);
+
                 std::string nextPlayerId = findNextPlayer(room, clientId);
                 if (nextPlayerId != "-1") {
                     room.currentPlayerId = nextPlayerId;
                     send(room.players[nextPlayerId].socket, "YOUR_TURN\n", 10, 0);
                 }
+
+                //dealerDrawCard(room);
             }
+            response = "PLAYER_CARD|" + response;
         }
-        if (!result.empty() && result.back() == '\n') {
-            result.pop_back();
-        }
-        response = result.empty() ? "STAND_RECEIVED" : result;
+        else if (command == "STAND") {
+            std::string roomId = state.players[clientId].inRoomId;
+            auto roomIt = state.rooms.find(roomId);
+            std::string result = "";
+            bool allPlayersStanding = true;
 
-    }
-    else if (command == "NEW_GAME") {
-        playerState.playerCards.clear();
-        playerState.playerScore = 0;
-        playerState.isStanding = false;
-        //response = "NEW_GAME_STARTED";
-    } else {
-        Room *room = getRoomForPlayer(clientId, state);
-        std::string message = "KICKED|" + clientId + "\n";
+            if (roomIt != state.rooms.end()) {
+                Room &room = roomIt->second;
+                room.players[clientId].isStanding = true;
+                state.players[clientId].isStanding = true;
 
-        for (auto &player : room->players) {
-            if (player.first != clientId) {
-                send(player.second.socket, message.c_str(), message.size(), 0);
+                for (const auto &player : room.players) {
+                    if (!player.second.isStanding) {
+                        allPlayersStanding = false;
+                        break;
+                    }
+                }
+
+                if (allPlayersStanding) {
+                    while(dealerDrawCard(room));
+                    result = getResult(room);
+                    //result = "RESULT|" + std::to_string(room.dealerScore) + "|" + (maxScore < room.dealerScore ? winner : "Dealer") + "\n";
+                    broadcastToPlayers(room, result, clientId);
+                    //resetGame(room);
+                } else {
+                    std::string nextPlayerId = findNextPlayer(room, clientId);
+                    if (nextPlayerId != "-1") {
+                        room.currentPlayerId = nextPlayerId;
+                        send(room.players[nextPlayerId].socket, "YOUR_TURN\n", 10, 0);
+                    }
+                }
             }
+            if (!result.empty() && result.back() == '\n') {
+                result.pop_back();
+            }
+            response = result.empty() ? "STAND_RECEIVED" : result;
+
         }
-
-        resetGame(*room, state);
-
-
-        {
-            std::lock_guard<std::mutex> lock(state.gameStateMutex);
-            state.disconnectSignals[clientId] = true; // Nastavení signálu pro odpojení
-            state.players.erase(clientId);           // Odebrání hráče ze stavu
+        else if (command == "NEW_GAME") {
+            playerState.playerCards.clear();
+            playerState.playerScore = 0;
+            playerState.isStanding = false;
+            //response = "NEW_GAME_STARTED";
+        } else {
+            response = disconnect(clientId, state);
         }
-
-        response = "DISCONNECT";
+    }catch (...) {
+        try {
+            logMessage("Standard exception caught: " + command);
+            response = disconnect(clientId, state);
+        } catch (...) {
+            logMessage("Error in exception handling.");
+        }
     }
 
     return response + "\n";
