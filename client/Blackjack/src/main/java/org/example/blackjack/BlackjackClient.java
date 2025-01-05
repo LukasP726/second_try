@@ -626,7 +626,11 @@ public class BlackjackClient {
                      //response.equals("PLAYER_NOT_FOUND") ||
                      response.equals("ROOM_NOT_FOUND") ||
                      response.equals("ROOM_FULL") ||
-                     response.equals("STAND_RECEIVED")){
+                     response.equals("STAND_RECEIVED")||
+                     response.equals("ERROR:INVALID_COMMAND")||
+                     response.equals("ERROR:INVALID_COMMAND_FORMAT")||
+                     response.equals("ERROR_NO_ROOM")
+                    ){
 
             } else {
                 //System.out.println("zase to nefunguje, response: "+response);

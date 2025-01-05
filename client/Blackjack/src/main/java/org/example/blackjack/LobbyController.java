@@ -108,7 +108,7 @@ public class LobbyController {
                 default: maxPlayers=1; break;
 
             }
-            String command = "CREATE_ROOM|"; //+ maxPlayers; // Zde můžeš přizpůsobit formát příkazu
+            String command = "CREATE_ROOM|" + maxPlayers; // Zde můžeš přizpůsobit formát příkazu
             // Odeslat příkaz na server (zde bys měl mít metodu pro odesílání příkazů)
             client.sendCommand(command);
 

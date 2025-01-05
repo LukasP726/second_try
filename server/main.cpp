@@ -526,9 +526,15 @@ std::string findNextPlayer(Room &room, const std::string currentPlayerId) {
 }
 
 
-std::string disconnect(const std::string clientId, GameState &state){
+std::string disconnect(const std::string &clientId, GameState &state){
     Room *room = getRoomForPlayer(clientId, state);
+    if(nullptr == room) {
+        //std::cout << "nullpointer" << std::endl;
+        return "DISCONNECT";
+    }
     std::string message = "KICKED|" + clientId + "\n";
+
+
 
     for (auto &player : room->players) {
         if (player.first != clientId) {
@@ -547,6 +553,7 @@ std::string disconnect(const std::string clientId, GameState &state){
 
     return "DISCONNECT";
 }
+
 
 std::string substringTryCatch(std::string command, int startIndex, int endIndex, GameState &state, std::string clientId) {
     try {
@@ -645,7 +652,13 @@ std::string handleCommand(const std::string &command, GameState &state, const st
             // Extrahování roomId ze zprávy (předpokládáme, že formát je "JOIN_ROOM|roomId")
             //std::string roomId = command.substr(11);  // Ořízne "JOIN_ROOM|" a zůstane pouze roomId
             Room *room = getRoomForPlayer(clientId, state);
-            response = leaveRoom(clientId, room->roomId, state);
+            if(room != nullptr) {
+                response = leaveRoom(clientId, room->roomId, state);
+            }
+            else {
+                response = "ERROR:INVALID_COMMAND";
+            }
+
             //response = "ROOM_JOINED";
         }
 
@@ -832,13 +845,15 @@ void reconnectThread(const std::string &playerId, GameState &gameState, int oldS
             std::cout << message << std::endl;
             logMessage(message);
             Room *room = getRoomForPlayer(playerId, gameState);
-            message = "KICKED|" + playerId + "\n";
+            if(room != nullptr) {
+                message = "KICKED|" + playerId + "\n";
 
-            for (auto &player : room->players) {
-                send(player.second.socket, message.c_str(), message.size(), 0);
+                for (auto &player : room->players) {
+                    send(player.second.socket, message.c_str(), message.size(), 0);
+                }
+
+                resetGame(*room, gameState);
             }
-
-            resetGame(*room, gameState);
             gameState.players.erase(playerId);
             closeSocket(oldSocket); // Zavřít starý socket
         }
