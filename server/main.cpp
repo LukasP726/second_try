@@ -174,7 +174,8 @@ std::string getResult(Room &room) {
 
 // Funkce pro zpracování připojení hráče
 std::string handlePlayerConnection(int socket, const std::string &receivedId, GameState &gameState) {
-    if (!receivedId.empty()) {
+    //TODO: UPRAVIT
+    if (!receivedId.empty() || receivedId.length() <=10 ) {
         std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
         std::string turn_flag="";
         std:bool send_flag = false;
@@ -748,7 +749,7 @@ std::string handleCommand(const std::string &command, GameState &state, const st
             playerState.isStanding = false;
             //response = "NEW_GAME_STARTED";
         } else {
-            response = disconnect(clientId, state);
+            //response = disconnect(clientId, state);
         }
     }catch (...) {
         try {
@@ -825,7 +826,8 @@ void reconnectThread(const std::string &playerId, GameState &gameState, int oldS
             }
 
             // Pokud je hráč aktivní, ukončíme reconnect
-            if (gameState.players[playerId].isActive && gameState.players[playerId].socket != oldSocket) {
+            // && gameState.players[playerId].socket != oldSocket
+            if (gameState.players[playerId].isActive) {
                 std::string message = "Player reconnected during reconnect window, ID: " + playerId;
                 std::cout << message << std::endl;
                 logMessage(message);
@@ -855,7 +857,7 @@ void reconnectThread(const std::string &playerId, GameState &gameState, int oldS
                 resetGame(*room, gameState);
             }
             gameState.players.erase(playerId);
-            closeSocket(oldSocket); // Zavřít starý socket
+            //closeSocket(oldSocket); // Zavřít starý socket
         }
     }
 }
@@ -925,6 +927,7 @@ void clientHandler(int client_socket, GameState &gameState, int maxPlayers) {
 
         if (bytes_received <= 0) {
                 std::string message = "Client seems disconnected, ID: " + playerId;
+                close(client_socket);
                 std::cout <<  message << std::endl;
                 logMessage(message);
                 message = "DISCONNECTED|"+playerId+"\n";
