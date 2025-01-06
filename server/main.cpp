@@ -749,7 +749,9 @@ std::string handleCommand(const std::string &command, GameState &state, const st
             playerState.isStanding = false;
             //response = "NEW_GAME_STARTED";
         } else {
+            logMessage("Unknown command from client: " + command);
             //response = disconnect(clientId, state);
+            response = "ERROR:INVALID_COMMAND_FORMAT";
         }
     }catch (...) {
         try {
