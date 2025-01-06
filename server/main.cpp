@@ -955,7 +955,7 @@ void clientHandler(int client_socket, GameState &gameState, int maxPlayers) {
             std::string command(buffer);
             command = trim(command);
 
-            if (command == "PONG") {
+            if (command.starts_with("PONG")) {
                 auto now = std::chrono::steady_clock::now();
                 std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
                 gameState.players[playerId].lastPingTime = now;
