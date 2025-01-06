@@ -831,6 +831,7 @@ void reconnectThread(const std::string &playerId, GameState &gameState, int oldS
                 std::string message = "Player reconnected during reconnect window, ID: " + playerId;
                 std::cout << message << std::endl;
                 logMessage(message);
+                std::thread(sendPing, gameState.players[playerId].socket, std::ref(gameState), maxPlayers).detach();
                 return;
             }
         }
@@ -927,7 +928,8 @@ void clientHandler(int client_socket, GameState &gameState, int maxPlayers) {
 
         if (bytes_received <= 0) {
                 std::string message = "Client seems disconnected, ID: " + playerId;
-                close(client_socket);
+                //TODO:
+                closeSocket(client_socket);
                 std::cout <<  message << std::endl;
                 logMessage(message);
                 message = "DISCONNECTED|"+playerId+"\n";
