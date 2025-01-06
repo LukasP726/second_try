@@ -133,6 +133,7 @@ public class BlackjackClient {
                 message= "Reconnection failed. Attempt " + attempts + " of " + MAX_RECONNECT_ATTEMPTS;
                 //System.out.println(message);
                 ClientLogger.logInfo(message);
+                /*
                 if (attempts < MAX_RECONNECT_ATTEMPTS) {
                     try {
                         Thread.sleep(RECONNECT_DELAY); // Počkej před dalším pokusem (např. 2 sekundy)
@@ -141,6 +142,8 @@ public class BlackjackClient {
                         break;
                     }
                 }
+                */
+                 
             }
         }
 
