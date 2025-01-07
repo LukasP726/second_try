@@ -166,6 +166,7 @@ public class BlackjackController {
     // Akce při stisknutí tlačítka "Hit"
     public void hit() {
         client.sendCommand("HIT"); // Odeslání příkazu "HIT" pomocí klienta
+        //client.sendCommand("SHOT");
         disableButtons();
     }
 
@@ -318,14 +319,7 @@ public class BlackjackController {
         //dealerScore.setText("Dealer Score: " + score);
     }
 
-    // Uzavření připojení při ukončení aplikace
-    public void closeConnection() {
-        try {
-            client.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+
 
 
 

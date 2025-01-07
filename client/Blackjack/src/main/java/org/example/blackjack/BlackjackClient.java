@@ -85,6 +85,15 @@ public class BlackjackClient {
     private void connectToServer() throws IOException {
         //while (running) {
             //try {
+
+                if (socket != null && !socket.isClosed()) {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
                 String message = "Attempting to connect to server..."+host+":"+port;
                 //System.out.println(message);
                 ClientLogger.logInfo(message);
@@ -121,6 +130,8 @@ public class BlackjackClient {
         int attempts = 0;
         boolean connected = false;
         String message ="";
+
+
         while (!connected && attempts < MAX_RECONNECT_ATTEMPTS) { // Určité maximum pokusů
             try {
                 connectToServer(); // Pokus o připojení
@@ -143,7 +154,7 @@ public class BlackjackClient {
                     }
                 }
                 */
-                 
+
             }
         }
 
@@ -210,6 +221,11 @@ public class BlackjackClient {
     public String getResponse() throws IOException {
         String response = in.readLine();
         String message = "Response from server: "+response;
+        if(response == null){
+            String ex = "Server connection lost.";
+            ClientLogger.logSevere(ex);
+            throw new IOException(ex);
+        }
         if(!response.equals("PING")){
             ClientLogger.logInfo(message);
         }
@@ -253,10 +269,14 @@ public class BlackjackClient {
 
 
 
-    public void close() throws IOException {
+    public void close()  {
         //stopPingingServer(); // Zastavení pingování před ukončením
         if (socket != null && !socket.isClosed()) {
-            socket.close();
+            try {
+                socket.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             running = false;
         }
 
