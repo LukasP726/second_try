@@ -750,14 +750,14 @@ std::string handleCommand(const std::string &command, GameState &state, const st
             //response = "NEW_GAME_STARTED";
         } else {
             logMessage("Unknown command from client: " + command);
-            closesocket(state.players[clientId].socket);
+            closeSocket(state.players[clientId].socket);
             //response = disconnect(clientId, state);
             //response = "ERROR:INVALID_COMMAND_FORMAT";
         }
     }catch (...) {
         try {
             logMessage("Standard exception caught: " + command);
-            closesocket(state.players[clientId].socket);
+            closeSocket(state.players[clientId].socket);
             //response = disconnect(clientId, state);
         } catch (...) {
             logMessage("Error in exception handling.");
