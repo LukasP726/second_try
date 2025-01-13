@@ -174,7 +174,6 @@ std::string getResult(Room &room) {
 
 // Funkce pro zpracování připojení hráče
 std::string handlePlayerConnection(int socket, const std::string &receivedId, GameState &gameState) {
-    //TODO: UPRAVIT
     if (!receivedId.empty() || receivedId.length() <=10 ) {
         std::lock_guard<std::mutex> lock(gameState.gameStateMutex);
         std::string turn_flag="";
@@ -209,13 +208,13 @@ std::string handlePlayerConnection(int socket, const std::string &receivedId, Ga
                         break;
                     }
                 }
-
+                //Pokud všichni hráči stojí, vracíme result
                 if (allPlayersStanding) {
                     turn_flag=getResult(room);
                 }
 
 
-
+                //Získáváme informace o všech hráčích včetně dealera
                 room.players[receivedId] = gameState.players[receivedId];
                 for (auto &dealerCards : room.dealerCards) {
                     response += dealerCards + "|";
@@ -238,6 +237,7 @@ std::string handlePlayerConnection(int socket, const std::string &receivedId, Ga
                         }
                         rest += "PLAYER_SCORE|"+std::to_string(player.second.playerScore);
                     }
+                    //Ptáme se jestli je hráč na řadě
                     if(room.currentPlayerId == receivedId && !gameState.players[receivedId].isStanding && turn_flag.empty()) {
                         turn_flag = "YOUR_TURN\n";
                     }
@@ -248,7 +248,6 @@ std::string handlePlayerConnection(int socket, const std::string &receivedId, Ga
 
 
             response+="\n";
-//!gameState.players[receivedId].inRoomId.empty()
             if(send_flag) {
                 send(socket, response.c_str(), response.size(), 0);
                 if(!turn_flag.empty()) {
@@ -257,7 +256,7 @@ std::string handlePlayerConnection(int socket, const std::string &receivedId, Ga
 
             }
 
-            //gameState.players[receivedId].inRoomId;
+
             return receivedId;
 
 
@@ -308,7 +307,7 @@ std::string getRandomCard() {
 
     return deck[dis(gen)]; // Náhodně vyber kartu z balíčku
 }
-
+//Funkce pro vyhodnocení honodnot jednotlivých karet
 int getCardValue(const std::string &card) {
     if (card[0] == 'A') return 11; // Eso za 11 bodů
     if (card[0] == 'K' || card[0] == 'Q' || card[0] == 'J') return 10; // K, Q, J za 10 bodů
@@ -323,7 +322,7 @@ std::string evaluateGame(const PlayerState &player, int dealerScore) {
     if (player.playerScore > dealerScore) return "PLAYER_WINS";  // Hráč má vyšší skóre
     return "DEALER_WINS";                                        // Dealer má vyšší skóre
 }
-
+//Funkce pro připojení do místnosti
 std::string joinRoom(const std::string &playerId, const std::string &roomId, GameState &gameState) {
     // Nejprve zkontrolujeme, zda je hráč již připojen k nějaké místnosti
     for (auto &roomEntry : gameState.rooms) {
@@ -400,7 +399,7 @@ std::string joinRoom(const std::string &playerId, const std::string &roomId, Gam
         return "ROOM_NOT_FOUND"; // Místnost nebyla nalezena
     }
 }
-
+//Funkce pro resetování hry a hráčů na původní hodnoty
 void resetGame(Room &room, GameState &state) {
     room.dealerCards.clear();
     room.dealerScore = 0;
@@ -421,7 +420,7 @@ void resetGame(Room &room, GameState &state) {
     }
 }
 
-
+//Funkce pro opustění místnosti
 std::string leaveRoom(const std::string &playerId, const std::string &roomId, GameState &gameState) {
     for (auto &roomEntry : gameState.rooms) {
         Room &room = roomEntry.second;
@@ -431,10 +430,7 @@ std::string leaveRoom(const std::string &playerId, const std::string &roomId, Ga
             if (it != room.players.end()) {
                 resetGame(room, gameState);
                 room.players.erase(it);  // Odebereme hráče z místnosti
-                //gameState.players[playerId].inRoomId.erase();
-                //gameState.players[playerId].playerScore = 0;
-                //gameState.players[playerId].playerCards.clear();
-                //gameState.players.erase(it);
+
                 std::string message = "Player " + playerId + " left room " + room.roomId;
                 std::cout << message<< std::endl;
                 logMessage(message);
@@ -445,7 +441,7 @@ std::string leaveRoom(const std::string &playerId, const std::string &roomId, Ga
                 }
                 return "PLAYER_LEFT";  // Odpovědní zpráva
             } else {
-                return "PLAYER_NOT_FOUND";  // Hráč není v místnosti
+                    return "PLAYER_NOT_FOUND";  // Hráč není v místnosti
             }
         }
     }
@@ -454,19 +450,22 @@ std::string leaveRoom(const std::string &playerId, const std::string &roomId, Ga
 }
 
 
-
-
-
-Room* getRoomForPlayer(const std::string& clientId, GameState &state) {
-    for (auto& [roomId, room] : state.rooms) {
-        if (room.players.find(clientId) != room.players.end()) {
-            return &room;
+//Funkce která vrátí místnost ve které se daný klient nachází
+Room* getPlayerRoom(const std::string& playerId, GameState& state) {
+    auto playerIt = state.players.find(playerId);
+    if (playerIt != state.players.end()) {
+        const std::string& roomId = playerIt->second.inRoomId;
+        auto roomIt = state.rooms.find(roomId);
+        if (roomIt != state.rooms.end()) {
+            return &roomIt->second;
         }
     }
-    return nullptr; // Hráč není v žádné místnosti
+    return nullptr; // Pokud hráč nebo místnost neexistuje
 }
 
 
+
+//Funkce vrací všechny dostupné místnosti a jejich stavy
 std::string getAllRooms(GameState &state) {
     std::string response = "ROOMS"; // Začátek odpovědi
     for (const auto &roomPair : state.rooms) {
@@ -476,12 +475,12 @@ std::string getAllRooms(GameState &state) {
     }
     return response;
 }
-
+//Funkce pro přidání karty do ruky hráče
 void addCardToPlayer(PlayerState &playerState, const std::string &newCard) {
     playerState.playerCards.push_back(newCard);
     playerState.playerScore += getCardValue(newCard);
 }
-
+//Funkce pro poslání zprávy message všem kromě exludeClientId
 void broadcastToPlayers(const Room &room, const std::string &message,  const std::string &excludeClientId) {
     for (const auto &x : room.players) {
         if (x.first != excludeClientId) {
@@ -489,7 +488,7 @@ void broadcastToPlayers(const Room &room, const std::string &message,  const std
         }
     }
 }
-
+//Funkce simuluje tah karty dealera
 bool dealerDrawCard(Room &room) {
     if (room.dealerScore < 17) {
         std::string dealersNewCard = getRandomCard();
@@ -502,7 +501,7 @@ bool dealerDrawCard(Room &room) {
     }
     return false;
 }
-
+//Funkce pro střídání tahů hráčů v dané místnosti
 std::string findNextPlayer(Room &room, const std::string currentPlayerId) {
     auto it = room.players.find(currentPlayerId);
     if (it != room.players.end()) {
@@ -527,51 +526,10 @@ std::string findNextPlayer(Room &room, const std::string currentPlayerId) {
 }
 
 
-std::string disconnect(const std::string &clientId, GameState &state){
-    Room *room = getRoomForPlayer(clientId, state);
-    if(nullptr == room) {
-        //std::cout << "nullpointer" << std::endl;
-        return "DISCONNECT";
-    }
-    std::string message = "KICKED|" + clientId + "\n";
 
 
 
-    for (auto &player : room->players) {
-        if (player.first != clientId) {
-            send(player.second.socket, message.c_str(), message.size(), 0);
-        }
-    }
 
-    resetGame(*room, state);
-
-
-    {
-        std::lock_guard<std::mutex> lock(state.gameStateMutex);
-        state.disconnectSignals[clientId] = true; // Nastavení signálu pro odpojení
-        state.players.erase(clientId);           // Odebrání hráče ze stavu
-    }
-
-    return "DISCONNECT";
-}
-
-
-std::string substringTryCatch(std::string command, int startIndex, int endIndex, GameState &state, std::string clientId) {
-    try {
-        if(endIndex != -1) {
-            return command.substr(startIndex, endIndex);
-        }
-        else { return command.substr(startIndex);}
-
-    }catch (const std::exception &e) {
-        // Logování chyby
-        logMessage("Error processing command: " + std::string(e.what()));
-        disconnect(clientId, state);
-        return "-1";
-
-    }
-
-}
 
 
 
@@ -579,12 +537,11 @@ std::string substringTryCatch(std::string command, int startIndex, int endIndex,
 // Funkce pro zpracování příkazů a aktualizaci stavu hry
 //int clientId
 std::string handleCommand(const std::string &command, GameState &state, const std::string &clientId) {
-    //
+
     std::string response;
-    //int clientId
+
     PlayerState &playerState = state.players[clientId];
-    //std::cout << "Command recieved: " << command << std::endl;
-    //std::cout << "Command substring: " << command.substr(0, 9) << std::endl;
+
     try{
         if(command == "IN_GAME") {
             std::string roomId = state.players[clientId].inRoomId;
@@ -604,8 +561,6 @@ std::string handleCommand(const std::string &command, GameState &state, const st
             response = getAllRooms(state);
 
         }
-        //command.substr(0, 11) == "CREATE_ROOM"
-        //substringTryCatch(command,0,11,state, clientId) == "CREATE_ROOM"
         else if (command.substr(0, 11) == "CREATE_ROOM") {
             if(maxRooms > state.rooms.size()) {
 
@@ -614,7 +569,7 @@ std::string handleCommand(const std::string &command, GameState &state, const st
                 if (separatorPos != std::string::npos) {
                     // Extrahování maxPlayers
                     std::string maxPlayersStr = command.substr(separatorPos + 1);
-                    //std::string maxPlayersStr = substringTryCatch(command,separatorPos+1,-1,state, clientId);
+
                     int maxPlayers = std::stoi(maxPlayersStr); // Převod na číslo
 
                     // Generování ID místnosti
@@ -630,7 +585,7 @@ std::string handleCommand(const std::string &command, GameState &state, const st
                     response = getAllRooms(state);
                 }   else {
                     // Chybné formátování zprávy
-                    response = "ERROR:INVALID_COMMAND_FORMAT";
+                    response = "ERROR_INVALID_COMMAND_FORMAT";
                 }
             }
 
@@ -639,25 +594,22 @@ std::string handleCommand(const std::string &command, GameState &state, const st
             }
 
         }
-        //command.substr(0, 9) == "JOIN_ROOM"
-        //substringTryCatch(command,0,9,state, clientId) == "JOIN_ROOM"
+
         else if (command.substr(0, 9) == "JOIN_ROOM") {
             // Extrahování roomId ze zprávy (předpokládáme, že formát je "JOIN_ROOM|roomId")
             std::string roomId = command.substr(10);  // Ořízne "JOIN_ROOM|" a zůstane pouze roomId
-            //std::string roomId = substringTryCatch(command,10,-1,state, clientId);
+
             response = joinRoom(clientId, roomId, state);
-            //response = "ROOM_JOINED";
+
         }
-        //.substr(0, 10)
+
         else if (command == "LEAVE_ROOM") {
-            // Extrahování roomId ze zprávy (předpokládáme, že formát je "JOIN_ROOM|roomId")
-            //std::string roomId = command.substr(11);  // Ořízne "JOIN_ROOM|" a zůstane pouze roomId
-            Room *room = getRoomForPlayer(clientId, state);
+            Room *room = getPlayerRoom(clientId, state);
             if(room != nullptr) {
                 response = leaveRoom(clientId, room->roomId, state);
             }
             else {
-                response = "ERROR:INVALID_COMMAND";
+                response = "ERROR_INVALID_COMMAND";
             }
 
             //response = "ROOM_JOINED";
@@ -666,7 +618,7 @@ std::string handleCommand(const std::string &command, GameState &state, const st
         else if (command == "WAIT_FOR_OPPONENT") {
             //response = "OPPONENT_JOINED";
 
-            Room* room = getRoomForPlayer(clientId, state); // Získání místnosti, ve které je hráč připojen
+            Room* room = getPlayerRoom(clientId, state); // Získání místnosti, ve které je hráč připojen
 
             if (room != nullptr) {
                 if (room->players.size() >= room->maxPlayers) {
@@ -726,9 +678,8 @@ std::string handleCommand(const std::string &command, GameState &state, const st
                 if (allPlayersStanding) {
                     while(dealerDrawCard(room));
                     result = getResult(room);
-                    //result = "RESULT|" + std::to_string(room.dealerScore) + "|" + (maxScore < room.dealerScore ? winner : "Dealer") + "\n";
                     broadcastToPlayers(room, result, clientId);
-                    //resetGame(room);
+
                 } else {
                     std::string nextPlayerId = findNextPlayer(room, clientId);
                     if (nextPlayerId != "-1") {
@@ -851,7 +802,7 @@ void reconnectThread(const std::string &playerId, GameState &gameState, int oldS
             std::string message = "Reconnect window expired for client ID: " + playerId;
             std::cout << message << std::endl;
             logMessage(message);
-            Room *room = getRoomForPlayer(playerId, gameState);
+            Room *room = getPlayerRoom(playerId, gameState);
             if(room != nullptr) {
                 message = "KICKED|" + playerId + "\n";
 
@@ -862,23 +813,12 @@ void reconnectThread(const std::string &playerId, GameState &gameState, int oldS
                 resetGame(*room, gameState);
             }
             gameState.players.erase(playerId);
-            //closeSocket(oldSocket); // Zavřít starý socket
+            closeSocket(oldSocket); // Zavřít starý socket
         }
     }
 }
 
 
-Room* getPlayerRoom(const std::string& playerId, GameState& state) {
-    auto playerIt = state.players.find(playerId);
-    if (playerIt != state.players.end()) {
-        const std::string& roomId = playerIt->second.inRoomId;
-        auto roomIt = state.rooms.find(roomId);
-        if (roomIt != state.rooms.end()) {
-            return &roomIt->second;
-        }
-    }
-    return nullptr; // Pokud hráč nebo místnost neexistuje
-}
 
 
 
@@ -932,7 +872,6 @@ void clientHandler(int client_socket, GameState &gameState, int maxPlayers) {
 
         if (bytes_received <= 0) {
                 std::string message = "Client seems disconnected, ID: " + playerId;
-                //TODO:
                 closeSocket(client_socket);
                 std::cout <<  message << std::endl;
                 logMessage(message);
@@ -948,8 +887,6 @@ void clientHandler(int client_socket, GameState &gameState, int maxPlayers) {
                 }
 
 
-
-                //TODO:poslat klient is inactive
 
                 std::thread(reconnectThread, playerId, std::ref(gameState), client_socket).detach();
                 break;

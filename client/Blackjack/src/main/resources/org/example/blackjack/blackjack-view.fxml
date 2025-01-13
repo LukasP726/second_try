@@ -4,7 +4,7 @@
 <?import javafx.scene.text.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-            fx:controller="org.example.blackjack.BlackjackController">
+            fx:controller="org.example.blackjack.controller.BlackjackController">
     <!-- Horní část (Titulek) -->
     <top>
         <VBox alignment="CENTER" spacing="10.0" style="-fx-padding: 10px; -fx-background-color: #f0f0f0;">

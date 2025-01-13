@@ -4,8 +4,9 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.example.blackjack.controller.ConnectController;
 
-public class Main extends Application {
+ public class Main extends Application {
 
     ConnectController controller;
     @Override

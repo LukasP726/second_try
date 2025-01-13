@@ -1,0 +1,282 @@
+[2025-01-06 10:42:02] Starting server on 127.0.0.1 :8080...
+[2025-01-06 10:42:02] Limit for rooms: 50
+[2025-01-06 10:42:02] Limit for players: 50
+[2025-01-06 10:42:10] Player connected with new ID: win on socket: 256
+[2025-01-06 10:42:14] Player win created room 2f925b5b-c3ce6-48e69-01d27-20a28509a
+[2025-01-06 10:42:18] Player win joined room 2f925b5b-c3ce6-48e69-01d27-20a28509a
+[2025-01-06 10:42:18] Game starting in room 2f925b5b-c3ce6-48e69-01d27-20a28509a
+[2025-01-06 10:42:25] Client seems disconnected, ID: win
+[2025-01-06 10:42:34] Player reconnected with ID: win and socket: 312
+[2025-01-06 10:42:35] Player reconnected during reconnect window, ID: win
+[2025-01-06 11:42:16] Starting server on 127.0.0.1 :8080...
+[2025-01-06 11:42:16] Limit for rooms: 50
+[2025-01-06 11:42:16] Limit for players: 50
+[2025-01-06 11:42:34] Player connected with new ID: win on socket: 152
+[2025-01-06 11:42:40] Player win created room 50dd1f56-480e0-bc166-9a337-3cbb6b372
+[2025-01-06 11:42:42] Player win joined room 50dd1f56-480e0-bc166-9a337-3cbb6b372
+[2025-01-06 11:42:42] Game starting in room 50dd1f56-480e0-bc166-9a337-3cbb6b372
+[2025-01-06 11:42:48] Client seems disconnected, ID: win
+[2025-01-06 11:42:58] Player reconnected with ID: win and socket: 204
+[2025-01-06 11:42:58] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:24:21] Starting server on 127.0.0.1 :8080...
+[2025-01-07 12:24:21] Limit for rooms: 50
+[2025-01-07 12:24:21] Limit for players: 50
+[2025-01-07 12:24:50] Player connected with new ID: win on socket: 212
+[2025-01-07 12:24:53] Player win created room 17c94d3e-714f3-b2517-dc2d0-72dadf15d
+[2025-01-07 12:25:06] Starting server on 127.0.0.1 :8080...
+[2025-01-07 12:25:06] Limit for rooms: 50
+[2025-01-07 12:25:06] Limit for players: 50
+[2025-01-07 12:25:20] Player connected with new ID: win on socket: 208
+[2025-01-07 12:25:40] Client seems disconnected, ID: win
+[2025-01-07 12:25:40] Player reconnected with ID: win and socket: 212
+[2025-01-07 12:25:41] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:26:00] Client seems disconnected, ID: win
+[2025-01-07 12:26:00] Player reconnected with ID: win and socket: 264
+[2025-01-07 12:26:01] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:26:20] Client seems disconnected, ID: win
+[2025-01-07 12:26:20] Player reconnected with ID: win and socket: 260
+[2025-01-07 12:26:21] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:26:40] Client seems disconnected, ID: win
+[2025-01-07 12:26:40] Player reconnected with ID: win and socket: 296
+[2025-01-07 12:26:41] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:27:00] Client seems disconnected, ID: win
+[2025-01-07 12:27:00] Player reconnected with ID: win and socket: 216
+[2025-01-07 12:27:01] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:27:20] Client seems disconnected, ID: win
+[2025-01-07 12:27:20] Player reconnected with ID: win and socket: 344
+[2025-01-07 12:27:21] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:27:40] Client seems disconnected, ID: win
+[2025-01-07 12:27:40] Player reconnected with ID: win and socket: 280
+[2025-01-07 12:27:41] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:28:00] Client seems disconnected, ID: win
+[2025-01-07 12:28:00] Player reconnected with ID: win and socket: 376
+[2025-01-07 12:28:01] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:28:20] Client seems disconnected, ID: win
+[2025-01-07 12:28:20] Player reconnected with ID: win and socket: 360
+[2025-01-07 12:28:21] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:28:40] Client seems disconnected, ID: win
+[2025-01-07 12:28:40] Player reconnected with ID: win and socket: 348
+[2025-01-07 12:28:41] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:29:00] Client seems disconnected, ID: win
+[2025-01-07 12:29:00] Player reconnected with ID: win and socket: 392
+[2025-01-07 12:29:01] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:29:20] Client seems disconnected, ID: win
+[2025-01-07 12:29:20] Player reconnected with ID: win and socket: 328
+[2025-01-07 12:29:21] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:29:40] Client seems disconnected, ID: win
+[2025-01-07 12:29:40] Player reconnected with ID: win and socket: 408
+[2025-01-07 12:29:41] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:30:00] Client seems disconnected, ID: win
+[2025-01-07 12:30:00] Player reconnected with ID: win and socket: 428
+[2025-01-07 12:30:01] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:30:20] Client seems disconnected, ID: win
+[2025-01-07 12:30:20] Player reconnected with ID: win and socket: 432
+[2025-01-07 12:30:21] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:30:40] Client seems disconnected, ID: win
+[2025-01-07 12:30:40] Player reconnected with ID: win and socket: 440
+[2025-01-07 12:30:41] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:31:00] Client seems disconnected, ID: win
+[2025-01-07 12:31:00] Player reconnected with ID: win and socket: 352
+[2025-01-07 12:31:01] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:31:20] Client seems disconnected, ID: win
+[2025-01-07 12:31:20] Player reconnected with ID: win and socket: 420
+[2025-01-07 12:31:21] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:31:40] Client seems disconnected, ID: win
+[2025-01-07 12:31:40] Player reconnected with ID: win and socket: 340
+[2025-01-07 12:31:41] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:32:00] Client seems disconnected, ID: win
+[2025-01-07 12:32:01] Player reconnected with ID: win and socket: 288
+[2025-01-07 12:32:01] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:32:21] Client seems disconnected, ID: win
+[2025-01-07 12:32:21] Player reconnected with ID: win and socket: 492
+[2025-01-07 12:32:21] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:32:41] Client seems disconnected, ID: win
+[2025-01-07 12:32:41] Player reconnected with ID: win and socket: 404
+[2025-01-07 12:32:41] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:33:01] Client seems disconnected, ID: win
+[2025-01-07 12:33:01] Player reconnected with ID: win and socket: 424
+[2025-01-07 12:33:01] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:33:21] Client seems disconnected, ID: win
+[2025-01-07 12:33:21] Player reconnected with ID: win and socket: 320
+[2025-01-07 12:33:21] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:33:41] Client seems disconnected, ID: win
+[2025-01-07 12:33:41] Player reconnected with ID: win and socket: 488
+[2025-01-07 12:33:41] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:34:01] Client seems disconnected, ID: win
+[2025-01-07 12:34:01] Player reconnected with ID: win and socket: 452
+[2025-01-07 12:34:01] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:34:21] Client seems disconnected, ID: win
+[2025-01-07 12:34:21] Player reconnected with ID: win and socket: 448
+[2025-01-07 12:34:21] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:34:41] Client seems disconnected, ID: win
+[2025-01-07 12:34:41] Player reconnected with ID: win and socket: 284
+[2025-01-07 12:34:41] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:35:01] Client seems disconnected, ID: win
+[2025-01-07 12:35:01] Player reconnected with ID: win and socket: 380
+[2025-01-07 12:35:01] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:35:21] Client seems disconnected, ID: win
+[2025-01-07 12:35:21] Player reconnected with ID: win and socket: 444
+[2025-01-07 12:35:21] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:35:41] Client seems disconnected, ID: win
+[2025-01-07 12:35:41] Player reconnected with ID: win and socket: 512
+[2025-01-07 12:35:41] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:36:01] Client seems disconnected, ID: win
+[2025-01-07 12:36:01] Player reconnected with ID: win and socket: 324
+[2025-01-07 12:36:01] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:36:15] Client seems disconnected, ID: win
+[2025-01-07 12:58:28] Starting server on 127.0.0.1 :8080...
+[2025-01-07 12:58:28] Limit for rooms: 50
+[2025-01-07 12:58:28] Limit for players: 50
+[2025-01-07 12:58:29] Player connected with new ID: win on socket: 260
+[2025-01-07 12:58:32] Player win created room c78c1154-cdbef-228f2-dfd0a-ef4cdb601
+[2025-01-07 12:58:33] Player win joined room c78c1154-cdbef-228f2-dfd0a-ef4cdb601
+[2025-01-07 12:58:33] Game starting in room c78c1154-cdbef-228f2-dfd0a-ef4cdb601
+[2025-01-07 12:58:34] Unknown command from client: SHOT
+[2025-01-07 12:58:34] Client seems disconnected, ID: win
+[2025-01-07 12:58:53] Player reconnected with ID: win and socket: 312
+[2025-01-07 12:58:54] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:59:13] Client seems disconnected, ID: win
+[2025-01-07 12:59:13] Player reconnected with ID: win and socket: 216
+[2025-01-07 12:59:14] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:59:33] Client seems disconnected, ID: win
+[2025-01-07 12:59:33] Player reconnected with ID: win and socket: 352
+[2025-01-07 12:59:34] Player reconnected during reconnect window, ID: win
+[2025-01-07 12:59:53] Client seems disconnected, ID: win
+[2025-01-07 12:59:53] Player reconnected with ID: win and socket: 340
+[2025-01-07 12:59:54] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:00:13] Client seems disconnected, ID: win
+[2025-01-07 13:00:14] Player reconnected with ID: win and socket: 220
+[2025-01-07 13:00:14] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:00:21] Client seems disconnected, ID: win
+[2025-01-07 13:00:25] Starting server on 127.0.0.1 :8080...
+[2025-01-07 13:00:25] Limit for rooms: 50
+[2025-01-07 13:00:25] Limit for players: 50
+[2025-01-07 13:00:34] Player connected with new ID: win on socket: 208
+[2025-01-07 13:00:37] Player win created room fb95874a-9301b-a8edb-cc4e1-277e53ce5
+[2025-01-07 13:00:38] Player win joined room fb95874a-9301b-a8edb-cc4e1-277e53ce5
+[2025-01-07 13:00:38] Game starting in room fb95874a-9301b-a8edb-cc4e1-277e53ce5
+[2025-01-07 13:00:39] Unknown command from client: SHOT
+[2025-01-07 13:00:39] Client seems disconnected, ID: win
+[2025-01-07 13:00:58] Player reconnected with ID: win and socket: 288
+[2025-01-07 13:00:59] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:01:18] Client seems disconnected, ID: win
+[2025-01-07 13:01:18] Player reconnected with ID: win and socket: 264
+[2025-01-07 13:01:19] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:01:38] Client seems disconnected, ID: win
+[2025-01-07 13:01:38] Player reconnected with ID: win and socket: 212
+[2025-01-07 13:01:39] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:01:58] Client seems disconnected, ID: win
+[2025-01-07 13:01:58] Player reconnected with ID: win and socket: 304
+[2025-01-07 13:01:59] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:02:18] Client seems disconnected, ID: win
+[2025-01-07 13:02:18] Player reconnected with ID: win and socket: 256
+[2025-01-07 13:02:19] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:02:38] Client seems disconnected, ID: win
+[2025-01-07 13:02:38] Player reconnected with ID: win and socket: 296
+[2025-01-07 13:02:39] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:02:58] Client seems disconnected, ID: win
+[2025-01-07 13:02:58] Player reconnected with ID: win and socket: 316
+[2025-01-07 13:02:59] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:03:18] Client seems disconnected, ID: win
+[2025-01-07 13:03:18] Player reconnected with ID: win and socket: 348
+[2025-01-07 13:03:19] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:03:38] Client seems disconnected, ID: win
+[2025-01-07 13:03:38] Player reconnected with ID: win and socket: 380
+[2025-01-07 13:03:39] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:03:58] Client seems disconnected, ID: win
+[2025-01-07 13:03:58] Player reconnected with ID: win and socket: 216
+[2025-01-07 13:03:59] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:04:18] Client seems disconnected, ID: win
+[2025-01-07 13:04:18] Player reconnected with ID: win and socket: 376
+[2025-01-07 13:04:19] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:04:38] Client seems disconnected, ID: win
+[2025-01-07 13:04:38] Player reconnected with ID: win and socket: 268
+[2025-01-07 13:04:39] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:04:58] Client seems disconnected, ID: win
+[2025-01-07 13:04:58] Player reconnected with ID: win and socket: 292
+[2025-01-07 13:04:59] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:05:18] Client seems disconnected, ID: win
+[2025-01-07 13:05:18] Player reconnected with ID: win and socket: 392
+[2025-01-07 13:05:19] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:05:38] Client seems disconnected, ID: win
+[2025-01-07 13:05:38] Player reconnected with ID: win and socket: 352
+[2025-01-07 13:05:39] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:05:58] Client seems disconnected, ID: win
+[2025-01-07 13:05:58] Player reconnected with ID: win and socket: 400
+[2025-01-07 13:05:59] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:06:18] Client seems disconnected, ID: win
+[2025-01-07 13:06:18] Player reconnected with ID: win and socket: 340
+[2025-01-07 13:06:19] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:06:38] Client seems disconnected, ID: win
+[2025-01-07 13:06:38] Player reconnected with ID: win and socket: 388
+[2025-01-07 13:06:39] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:06:58] Client seems disconnected, ID: win
+[2025-01-07 13:06:58] Player reconnected with ID: win and socket: 412
+[2025-01-07 13:06:59] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:07:18] Client seems disconnected, ID: win
+[2025-01-07 13:07:18] Player reconnected with ID: win and socket: 460
+[2025-01-07 13:07:19] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:07:38] Client seems disconnected, ID: win
+[2025-01-07 13:07:38] Player reconnected with ID: win and socket: 404
+[2025-01-07 13:07:39] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:07:58] Client seems disconnected, ID: win
+[2025-01-07 13:07:58] Player reconnected with ID: win and socket: 444
+[2025-01-07 13:07:59] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:08:18] Client seems disconnected, ID: win
+[2025-01-07 13:08:19] Player reconnected with ID: win and socket: 372
+[2025-01-07 13:08:19] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:08:39] Client seems disconnected, ID: win
+[2025-01-07 13:08:39] Player reconnected with ID: win and socket: 420
+[2025-01-07 13:08:39] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:08:59] Client seems disconnected, ID: win
+[2025-01-07 13:08:59] Player reconnected with ID: win and socket: 408
+[2025-01-07 13:08:59] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:09:19] Client seems disconnected, ID: win
+[2025-01-07 13:09:19] Player reconnected with ID: win and socket: 492
+[2025-01-07 13:09:19] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:09:39] Client seems disconnected, ID: win
+[2025-01-07 13:09:39] Player reconnected with ID: win and socket: 364
+[2025-01-07 13:09:39] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:09:59] Client seems disconnected, ID: win
+[2025-01-07 13:09:59] Player reconnected with ID: win and socket: 312
+[2025-01-07 13:09:59] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:10:19] Client seems disconnected, ID: win
+[2025-01-07 13:10:19] Player reconnected with ID: win and socket: 524
+[2025-01-07 13:10:19] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:10:39] Client seems disconnected, ID: win
+[2025-01-07 13:10:39] Player reconnected with ID: win and socket: 496
+[2025-01-07 13:10:39] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:10:59] Client seems disconnected, ID: win
+[2025-01-07 13:10:59] Player reconnected with ID: win and socket: 332
+[2025-01-07 13:10:59] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:11:04] Client seems disconnected, ID: win
+[2025-01-07 13:11:08] Starting server on 127.0.0.1 :8080...
+[2025-01-07 13:11:08] Limit for rooms: 50
+[2025-01-07 13:11:08] Limit for players: 50
+[2025-01-07 13:11:16] Player connected with new ID: win on socket: 256
+[2025-01-07 13:13:02] Starting server on 127.0.0.1 :8080...
+[2025-01-07 13:13:02] Limit for rooms: 50
+[2025-01-07 13:13:02] Limit for players: 50
+[2025-01-07 13:13:17] Player connected with new ID: win on socket: 252
+[2025-01-07 13:13:37] Client seems disconnected, ID: win
+[2025-01-07 13:13:37] Player reconnected with ID: win and socket: 260
+[2025-01-07 13:13:38] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:13:57] Client seems disconnected, ID: win
+[2025-01-07 13:13:57] Player reconnected with ID: win and socket: 256
+[2025-01-07 13:13:58] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:14:17] Client seems disconnected, ID: win
+[2025-01-07 13:14:17] Player reconnected with ID: win and socket: 296
+[2025-01-07 13:14:18] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:14:37] Client seems disconnected, ID: win
+[2025-01-07 13:14:37] Player reconnected with ID: win and socket: 336
+[2025-01-07 13:14:38] Player reconnected during reconnect window, ID: win
+[2025-01-07 13:14:39] Client seems disconnected, ID: win
+[2025-01-07 13:16:03] Starting server on 127.0.0.1 :8080...
+[2025-01-07 13:16:03] Limit for rooms: 50
+[2025-01-07 13:16:03] Limit for players: 50
+[2025-01-07 13:16:10] Player connected with new ID: win on socket: 188
+[2025-01-07 13:16:33] Starting server on 127.0.0.1 :8080...
+[2025-01-07 13:16:33] Limit for rooms: 50
+[2025-01-07 13:16:33] Limit for players: 50
+[2025-01-07 13:16:50] Player connected with new ID: win on socket: 88
+[2025-01-07 13:17:58] Client seems disconnected, ID: win
